@@ -1,0 +1,4 @@
+*.pyc
+acq400_cli.log
+*.egg-info
+*.dat
