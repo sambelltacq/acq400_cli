@@ -282,6 +282,7 @@ class Carrier:
     
     @property
     def stream_enabled(self):
+        if not self.s0.knob_exists('stream_subset'): return True
         invalid = ['--fill-scale', '--null-copy']
         options = self.s0.stream_subset.split('\n')[-1].strip()
         return not any(arg in options for arg in invalid)
@@ -540,12 +541,14 @@ class Carrier:
 
     def get_stream_mask_raw(self):
         """Returns raw stream mask channels"""
+        if not self.s0.knob_exists('stream_subset_mask'): return None
         mask = self.s0.stream_subset_mask
         if mask.lower() == 'none': return None
         return bitmask_to_chans(mask)
 
     def get_stream_mask(self):
         """Get the stream mask channels"""
+        if not self.s0.knob_exists('stream_subset_mask'): return None
         sample = StreamSample(self, None)
         mask = self.get_stream_mask_raw()
         if not mask: return None
@@ -553,6 +556,7 @@ class Carrier:
 
     def set_stream_mask(self, mask):
         """Set the stream mask chanmels"""
+        if not self.s0.knob_exists('stream_subset_mask'): return
         if not mask: 
             self.s0.stream_subset_mask = 'none'
             return
