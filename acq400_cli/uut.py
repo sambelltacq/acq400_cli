@@ -253,8 +253,11 @@ class Carrier:
     @property
     def sample_rate(self):
         """sample rate"""
-        # ACQ43X_SAMPLE_RATE
-        return round(float(self.s0.SIG__CLK_S1__FREQ), -3)
+        if self.ai_master.model.upper().startswith('ACQ48'):
+            clk = self.ai_master.ACQ480__OSR
+        else:
+            clk = self.s0.SIG__CLK_S1__FREQ
+        return round(float(clk), -3)
 
     @property
     def transient_format(self):
@@ -267,10 +270,9 @@ class Carrier:
         return StreamSample(self)
 
     @property
-    def data_rate_raw(self):
+    def data_rate(self):
         """Return the data rate sans mask"""
-        sample_format = StreamSample(self, None)
-        return (sample_format.bytes * self.sample_rate) / 1_000_000
+        return (int(self.s0.ssb) * self.sample_rate) / 1_000_000
 
     @property
     def data_rate_masked(self):
