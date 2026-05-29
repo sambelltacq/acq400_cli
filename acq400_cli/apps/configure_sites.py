@@ -10,11 +10,13 @@ from acq400_cli import ArgTypes, Collection
 def main(args):
     uuts = Collection(args.uutnames)
 
+    print(f"Configuring sites")
     uuts.run0(args.sites, args.spad)
     uuts.ident_spad(args.ident)
     uuts.set_spad1_count(args.us)
 
-    print(f"Configure sites {uuts.names}")
+    for uutname, sample_format in uuts.transient_format.items():
+        print(f"  {uutname} Sample {sample_format.tag} {sample_format.bytes} Bytes")
 
 def get_parser():
     parser = argparse.ArgumentParser(description='Configure sites on UUTs')
