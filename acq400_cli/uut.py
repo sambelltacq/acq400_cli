@@ -27,6 +27,7 @@ class Carrier:
         self.addr = addr
         self.__build_sites()
         self.hostname = self.s0.HN
+        self.status = {}
 
     def __getitem__(self, site):
         """Access Site via index notation"""
@@ -377,7 +378,7 @@ class Carrier:
         logging.info(f"Read {data.nbytes} bytes from {self.hostname}")
         return data
 
-    def stream_to_host(self, bytes, port=PORTS.STREAM, sample_format=None, datafile=None, bufferlen=4*(1024*1014)):
+    def stream_to_host(self, target_bytes, port=PORTS.STREAM, sample_format=None, datafile=None, bufferlen=4*(1024*1014)):
         """Stream data to host"""
 
         if not self.stream_enabled: 
@@ -387,11 +388,11 @@ class Carrier:
             logging.warning(f"{self.hostname} Stream datarate above {MAX_ETH_RATE} MB/s")
 
         if isinstance(datafile, str): datafile = open(datafile, 'wb')
-        savepath = getattr(datafile, 'name')
-        logging.debug(f"Streaming to host {bytes} Bytes")
+        savepath = getattr(datafile, 'name', None)
+        logging.debug(f"Streaming to host {target_bytes} Bytes")
 
 
-        bytes = int((bytes // sample_format.bytes) * sample_format.bytes)
+        target_bytes = int((target_bytes // sample_format.bytes) * sample_format.bytes)
         nsamples = int(bufferlen // sample_format.bytes)
         bufferlen = int(nsamples * sample_format.bytes)
 
@@ -402,15 +403,19 @@ class Carrier:
         spads = sample_format.types.get('SPD', [])
         spad0_chan = spads[0] if spads else None
 
-        self.stream = DotDict({
+        self.status = DotDict({
+            'state': 'streaming',
             'total_bytes': 0,
             'time_start': 0,
             'missed': 0,
+            'spad0_chan': spad0_chan,
             'savepath': savepath,
-            'bytes': bytes,
+            'target_bytes': target_bytes,
+            'stop_flag': False,
+            'ssb': sample_format.bytes,
         })
 
-        logging.info(f"{self.hostname} Init stream {bytes >> 20} MiB ({self.data_rate_masked}MB/s)")
+        logging.info(f"{self.hostname} Init stream {target_bytes >> 20} MiB ({self.data_rate_masked}MB/s)")
 
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
@@ -426,31 +431,34 @@ class Carrier:
                     if nbytes == 0: break
 
                     cursor += nbytes
-                    self.stream.total_bytes += nbytes
+                    self.status.total_bytes += nbytes
 
-                    if self.stream.time_start == 0: 
-                        self.stream.time_start = time.time()
+                    if self.status.time_start == 0: 
+                        sock.settimeout(30)
+                        self.status.time_start = time.time()
 
                     if cursor >= bufferlen:
-                        #print(f"{self.stream.total_bytes:,} / {bytes:,}")
-                        trim = max(0, self.stream.total_bytes - bytes)
-                        if datafile: datafile.write(buffer[:cursor - trim])
-                        cursor = 0
+
+                        if datafile: 
+                            trim = max(0, self.status.total_bytes - target_bytes)
+                            datafile.write(buffer[:cursor - trim])
 
                         if spad0_chan != None:
                             spad0_data = array[str(spad0_chan)]
-                            self.stream.missed += np.sum(np.diff(spad0_data, prepend=spad0_last) - 1)
+                            self.status.missed += np.sum(np.diff(spad0_data, prepend=spad0_last) - 1)
                             spad0_last = spad0_data[-1]
+                        
+                        cursor = 0
 
-                        if self.stream.total_bytes >= bytes: break
+                        if self.status.stop_flag: break
+                        if self.status.total_bytes >= target_bytes: break
 
             except KeyboardInterrupt: pass
 
         if datafile: datafile.close()
         
-        logging.info(f"{self.hostname} Finshed {self.stream.total_bytes >> 20}MB ({self.stream.total_bytes // sample_format.bytes} Samples)  streamed to {savepath}")
-        if self.stream.missed > 0: logging.warning(f"{self.hostname} Stream {self.stream.missed} missing samples")
-
+        logging.info(f"{self.hostname} Finshed {self.status.total_bytes >> 20}MB ({self.status.total_bytes // sample_format.bytes} Samples) streamed to {savepath}")
+        if self.status.missed > 0: logging.warning(f"{self.hostname} Stream {self.status.missed} missing samples")
         return savepath
    
     def run0(self, sites=None, spad=None):
@@ -570,6 +578,14 @@ class Carrier:
         """Generate data filename"""
         return gen_data_filename(self.hostname, sample_format, timestamp, seq)
 
+    def get_stream_status(self):
+        """return the stream status string"""
+        if not self.status: return None
+        current = self.status.total_bytes // self.status.ssb
+        target = self.status.target_bytes // self.status.ssb
+        runtime = int(time.time() - self.status.time_start) if self.status.time_start > 0 else 0
+        missed = '' if self.status.spad0_chan is None else f"({self.status.missed:,})"
+        return f"{self.hostname} [{self.cstate.name}] {runtime}s {current:,} / {target:,} {missed}"
 
 
 
@@ -622,14 +638,6 @@ class Collection(list):
 
         self.masters.wait_for_complete()
         self.slaves.wait_for_complete()
-
-    def trigger(self, trigger=None, siggen=None):
-        if trigger and trigger.line == 1: 
-            logging.info(f'Soft triggering')
-            self.trigger_soft_trigger()
-        elif siggen:
-            logging.info(f'Triggering {siggen}')
-            siggen.trigger()
 
 
     # Attribute methods

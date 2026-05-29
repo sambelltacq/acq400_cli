@@ -5,6 +5,7 @@ Utility classes and functions
 import time
 import inspect
 import threading
+import logging
 
 from acq400_cli.constants import TIMESTAMP_FMT
 
@@ -44,7 +45,10 @@ class RThread(threading.Thread):
     
     def run(self):
         try: self.value = self._target(*self._args, **self._kwargs)
-        except Exception as e: self.exception = e
+        except Exception as e:
+            self.exception = e
+            logging.debug(f"{self.name} {e}")
+
     
     def join(self, *args, **kwargs):
         super().join(*args, **kwargs)

@@ -25,7 +25,7 @@ def main(args):
         stream_mask=args.stream_mask
     )
 
-    print(f"Setup Host")
+    print(f"Setup Host {uuts.names}")
     stream = StreamClient(
         uuts,
         savedir=args.savedir,
@@ -41,14 +41,10 @@ def main(args):
         samples=args.samples,
         bytes=args.bytes
     )
-    print(f'waiting for ARM {uuts.names}')
 
-    uuts.wait_for_arm(timeout=30)
-    print('Armed')
+    stream.trigger_when_armed(trigger=args.trigger, siggen=siggen)
 
-    uuts.trigger(trigger=args.trigger, siggen=siggen)
-
-    stream.wait_for_stop()
+    stream.print_status()
 
 
 def get_parser():

@@ -37,7 +37,8 @@ class UUTData(np.ndarray):
 
     @classmethod
     def from_file(cls, filepath):
-        """Load structured samples from a .dat file via memory mapping."""
+        """Init from file using memory mapping"""
+        
         parts = parse_filename_parts(filepath)
         if not parts.format: logging.error("No format tag")
         sample_format = SampleFormatFromTag(parts.format)
@@ -45,7 +46,6 @@ class UUTData(np.ndarray):
         sample_bytes = sample_format.bytes
         file_size = os.path.getsize(filepath)
         n_samples = file_size // sample_bytes
-        remainder = file_size % sample_bytes
 
         data = np.memmap(
             filepath,

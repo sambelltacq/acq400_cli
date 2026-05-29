@@ -75,13 +75,14 @@ class CommandClient(Client):
 class StreamClient():
     """Client to handle streaming from multiple UUTs"""
 
-    def __init__(self, uuts, savedir='DATA', filebytes=None, filesamples=None, overwrite=False, hexdump=False):
+    def __init__(self, uuts, savedir='DATA', filebytes=None, filesamples=None, overwrite=False, hexdump=False, save=True):
         self.uuts=uuts
         self.savedir=savedir
         self.filebytes=filebytes
         self.filesamples=filesamples
         self.overwrite=overwrite
         self.hexdump=hexdump
+        self.save=save
         self.streams = {}
 
     def start(self, port=PORTS.STREAM, seconds=10, samples=None, bytes=None):
@@ -98,14 +99,16 @@ class StreamClient():
             if samples: bytes = sample_format.bytes * samples
             elif seconds: bytes = int(seconds * sample_format.bytes * uut.sample_rate)
 
-            datafile = StreamDataFile(
-                self.savedir,
-                filebytes,
-                sample_size=sample_format.bytes,
-                hostname=uut.hostname,
-                format=sample_format.tag,
-                timestamp=timestamp
-            )
+            datafile = None
+            if self.save:
+                datafile = StreamDataFile(
+                    self.savedir,
+                    filebytes,
+                    sample_size=sample_format.bytes,
+                    hostname=uut.hostname,
+                    format=sample_format.tag,
+                    timestamp=timestamp
+                )
 
             savepath = uut.stream_to_host(bytes, port, sample_format, datafile)
 
@@ -115,9 +118,29 @@ class StreamClient():
             self.streams[uutname] = RThread(target=wrapper, args=(uut,))
             self.streams[uutname].start()
 
-        
+    def trigger_when_armed(self, trigger=None, siggen=None):
+        """Trigger UUTs when ARMED"""
+        def wrapper():
+            print("Waiting for ARM")
+            self.uuts.wait_for_arm(timeout=30)
+            print("Armed")
+            if trigger and trigger.line == 1: 
+                logging.info(f'Soft triggering')
+                self.uuts.trigger_soft_trigger()
+            elif siggen:
+                logging.info(f'Triggering {siggen}')
+                siggen.trigger()
 
-    def wait_for_stop(self):
-        logging.debug("Waiting for stream end")
-        for thread in self.streams.values():
-            thread.join()
+        thread = RThread(target=wrapper, daemon=True)
+        thread.start()
+
+    def finshed(self):
+        """True if streams finshed else False"""
+        return all(not stream.is_alive() for stream in self.streams.values())
+
+    def print_status(self):
+        """Print UUT status until finshed"""
+        while not self.finshed():
+            for status in self.uuts.get_stream_status().values():
+                if status is not None:
+                    print(status)
