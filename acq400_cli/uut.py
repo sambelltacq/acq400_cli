@@ -398,7 +398,9 @@ class Carrier:
         buffer = bytearray(bufferlen)
         view = memoryview(buffer).cast('B')
         array = np.ndarray((nsamples,), dtype=sample_format.dtype, buffer=view)
-        spad0_chan = sample_format.types.get('SPD', [None])[0]
+
+        spads = sample_format.types.get('SPD', [])
+        spad0_chan = spads[0] if spads else None
 
         self.stream = DotDict({
             'total_bytes': 0,
@@ -544,7 +546,7 @@ class Carrier:
         if not mask: 
             self.s0.stream_subset_mask = 'none'
             return
-        sample = StreamSample(self, [])
+        sample = StreamSample(self, None)
         self.s0.stream_subset_mask = chans_to_bitmask([item for chan in mask for item in sample.channels[chan].physical])
 
     def has_hdmi_output(self):
