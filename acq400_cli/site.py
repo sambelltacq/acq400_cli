@@ -96,7 +96,8 @@ class Site:
         self.carrier = None
         self.socket = CommandSocket(self.addr, self.port)
         logging.debug(f"Initing Site {self.site} ({self.addr}:{self.port})")
-        load_overlay(self)
+        self.model = self.get_model()
+        load_overlay(self, self.model)
         self._enable_socket()
 
     def __setattr__(self, key, value):
@@ -144,6 +145,10 @@ class Site:
         """Replace '__' with ':'"""
         return knob.replace('__', ':')
 
+    def get_model(self):
+        """return site model"""
+        return self.get('MODEL', self.get('module_name', 'UNKNOWN')).upper().split(' ')[0]
+
     def help(self):
         return self.knobs
 
@@ -184,11 +189,6 @@ class Site:
     def role(self):
         """return site role"""
         return self.get('module_role', 'UNKNOWN').upper()
-
-    @property
-    def model(self):
-        """return site model"""
-        return self.get('MODEL', self.get('module_name', 'UNKNOWN')).upper().split(' ')[0]
 
     @property
     def is_master(self):
@@ -255,9 +255,8 @@ OVERLAYS = {
     "MGT482": Mgt,
 }
 
-def load_overlay(site):
+def load_overlay(site, model):
     """Load site overlay if present"""
-    model = site.get("MODEL", "").split(' ')[0]
     overlay = OVERLAYS.get(model)
     if not overlay: return
     logging.debug(f"{model} overlay applied to site {site.site}")
