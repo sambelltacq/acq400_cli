@@ -2,6 +2,9 @@
 
 """
 Stream data from UUTs to host
+
+Usage:
+    acq400_cli stream_to_host --stream_mask=1-4,33 --filesamples=1000000 --overwrite --hexdump acq2106_054
 """
 
 import argparse
