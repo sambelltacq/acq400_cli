@@ -466,7 +466,24 @@ class Carrier:
         logging.info(f"{self.hostname} Finshed {self.status.total_bytes >> 20}MB ({self.status.total_bytes // sample_format.bytes} Samples) streamed to {savepath}")
         if self.status.missed > 0: logging.warning(f"{self.hostname} Stream {self.status.missed} missing samples")
         return savepath
-   
+
+    def read_stream_sample(self, nsamples=1):
+        """Read samples from running stream"""
+        sample_format = self.stream_sample_format
+        nbytes = nsamples * sample_format.bytes
+        buffer = bytearray(nbytes)
+        view = memoryview(buffer).cast('B')
+        cursor = 0
+        with socket.socket() as sock:
+            sock.connect((self.addr, PORTS.DATA_SPY))
+            while True:
+                n = sock.recv_into(view[cursor:], nbytes - cursor)
+                if n == 0: break
+                if cursor >= nbytes: break
+                cursor += n
+        raw = np.frombuffer(buffer, dtype=sample_format.dtype, count=nsamples)
+        return UUTData(raw, sample_format)
+
     def run0(self, sites=None, spad=None):
         """Run run0"""
 
