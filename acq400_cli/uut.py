@@ -390,6 +390,9 @@ class Carrier:
         if not self.rgm_enabled and self.data_rate_masked > MAX_ETH_RATE: 
             logging.warning(f"{self.hostname} Stream datarate above {MAX_ETH_RATE} MB/s")
 
+        if not sample_format:
+            sample_format = self.stream_sample_format
+
         if isinstance(datafile, str): datafile = open(datafile, 'wb')
         savepath = getattr(datafile, 'name', None)
         logging.debug(f"Streaming to host {target_bytes} Bytes")
