@@ -21,6 +21,7 @@ import threading
 import socket
 import atexit
 import logging
+from functools import cached_property
 
 from acq400_cli.constants import PORTS
 from acq400_cli.exception import KnobNotFoundError
@@ -153,22 +154,22 @@ class Site:
         return self.knobs
 
     # Attribute methods
-    @property
+    @cached_property
     def knobs(self):
         """Get list of avaliable knobs"""
         return [self.escape_knob(knob) for knob in self.get("help").strip().split('\n')]
 
-    @property
+    @cached_property
     def is_ai(self):
         """True if site is ai else False"""
         return self.get('is_adc', '').startswith('1')
 
-    @property
+    @cached_property
     def is_ao(self):
         """True if site is ao else False"""
         return self.knob_exists('dac_dec')
 
-    @property
+    @cached_property
     def is_dio(self):
         """True if site is dio else False"""
         return self.knob_exists('DO32')
@@ -195,12 +196,12 @@ class Site:
         """True if module role is master else False"""
         return self.role == 'MASTER'
 
-    @property
+    @cached_property
     def data_size(self):
         """Return data size in bytes"""
         return 4 if int(self.data32) else 2
 
-    @property
+    @cached_property
     def nchan(self):
         """Return number of channels"""
         return int(self.active_chan)
