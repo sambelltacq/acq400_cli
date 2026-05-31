@@ -180,7 +180,7 @@ class Carrier:
     @property
     def sample_count(self):
         """Return current sample count"""
-        return int(self.s0.CONTINUOUS__SC)
+        return int(self.s0.CONTINUOUS__SC) & 0xFFFFFFFF
 
     @property
     def ioc_ready(self):
