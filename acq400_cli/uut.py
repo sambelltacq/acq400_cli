@@ -8,6 +8,7 @@ import socket
 import time
 import os
 import numpy as np
+from functools import cached_property
 
 from acq400_cli.utils import Triplet, chans_to_bitmask, bitmask_to_chans, FanoutProxy, DotDict
 from acq400_cli.constants import PORTS, SITES, CAPTURE_STATE, TRG_LINE, MAX_ETH_RATE
@@ -117,7 +118,7 @@ class Carrier:
 
     # Attribute methods
 
-    @property
+    @cached_property
     def sites(self):
         """Return a list of all sites"""
         carrier, sitelist = self.s0.SITELIST.split(',', 1)
@@ -221,20 +222,20 @@ class Carrier:
         if sites.upper() == 'NONE': return []
         return list(map(int, sites.split(',')))
 
-    @property
+    @cached_property
     def wr_site(self):
         """Return White rabbit sites"""
         sites = self.s0.get('has_wr', 'NONE').upper()
         if sites == 'NONE': return []
         return list(map(int, sites.split(' ')))
     
-    @property
+    @cached_property
     def hudp_site(self):
         sites = self.s0.get('has_hudp', 'NONE').upper()
         if sites == 'NONE': return []
         return list(map(int, sites.split(' ')))
 
-    @property
+    @cached_property
     def mgt_sites(self):
         sites = self.s0.get('has_mgt', 'NONE').upper()
         if sites == 'NONE': return []

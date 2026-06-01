@@ -174,7 +174,7 @@ class Site:
         """True if site is dio else False"""
         return self.knob_exists('DO32')
 
-    @property
+    @cached_property
     def features(self):
         "return a list of features"
         features = []
