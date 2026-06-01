@@ -291,6 +291,42 @@ class Carrier:
     def rgm_enabled(self):
         return Triplet(self.s1.rgm).enabled == 1
 
+    @cached_property
+    def fpga(self):
+        """Return fpga and timestamp"""
+        return self.s0.fpga_version.upper().split(' ')
+
+    @cached_property
+    def fpga_features(self):
+        """Return fpga features"""
+        features = DotDict({
+            'size': 0,
+            'decimation': 0,
+            'comms': [],
+        })
+        fpga, timestamp = self.fpga
+        features.timestamp = timestamp
+        features.wr = ('WR' in fpga) or ('E_W' in fpga) or ('U_W' in fpga) or ('A_W' in fpga)
+        features.udp = 'UDP' in fpga
+        features.udpx = 'UDPX' in fpga
+        features.cntr = 'CNTR' in fpga
+        features.pg = 'PG' in fpga
+        features.pwm = 'PWM' in fpga
+        features.dma = 2 if '2DMA' in fpga else 1
+        features.qen = 'QEN' in fpga
+
+        if '32B' in fpga: features.size = 32
+        if '64B' in fpga: features.size = 64
+        if 'DEC4' in fpga: features.decimation = 4
+        if 'DEC10' in fpga: features.decimation = 10
+
+        for comm in ['9080', '9011', '9091', '9511', '9815']:
+            if comm in fpga:
+                features.comms.append(comm)
+
+        return features
+
+
 
     # Normal methods
 
