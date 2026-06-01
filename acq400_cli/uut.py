@@ -104,7 +104,8 @@ class Carrier:
                             logging.debug(f"{self.addr}.{site} is dio master")
 
             except ConnectionRefusedError:
-                logging.debug(f"{self.addr}.{site} Not available")
+                #logging.debug(f"{self.addr}.{site} Not available")
+                pass
             except socket.gaierror:
                 logging.error(f"{self.addr} is not reachable")
                 raise

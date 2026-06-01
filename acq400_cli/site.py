@@ -44,7 +44,7 @@ class CommandSocket:
         """Connect socket to port"""
         self.close()
         try:
-            logging.debug(f"{self.addr}:{self.port} Initing Socket")
+            #logging.debug(f"{self.addr}:{self.port} Initing Socket")
             self.sock = socket.socket()
             self.sock.connect((self.addr, self.port))
             self.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
@@ -82,7 +82,7 @@ class CommandSocket:
     def close(self):
         """Close socket"""
         if self.sock:
-            logging.debug(f"{self.addr}:{self.port} Closing Socket")
+            #logging.debug(f"{self.addr}:{self.port} Closing Socket")
             self.sock.close()
 
 class Site:
