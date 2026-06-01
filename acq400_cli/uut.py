@@ -6,11 +6,11 @@ Carrier class representation
 import logging
 import socket
 import time
-import os
+import threading
 import numpy as np
 from functools import cached_property
 
-from acq400_cli.utils import Triplet, chans_to_bitmask, bitmask_to_chans, FanoutProxy, DotDict
+from acq400_cli.utils import Triplet, chans_to_bitmask, bitmask_to_chans, FanoutProxy, DotDict, RThread, StopWatch
 from acq400_cli.constants import PORTS, SITES, CAPTURE_STATE, TRG_LINE, MAX_ETH_RATE
 from acq400_cli.exception import IOCNotReadyError
 from acq400_cli.sample import TransientSample, StreamSample
@@ -26,6 +26,7 @@ class Carrier:
     def __init__(self, addr):
         logging.debug(f"Initing UUT {addr}")
         self.addr = addr
+        self.lock = threading.Lock()
         self.__build_sites()
         self.hostname = self.s0.HN
         self.status = {}
@@ -59,62 +60,67 @@ class Carrier:
         self.site_aliases.setdefault('ai_master', None)
         self.site_aliases.setdefault('ao_master', None)
         self.site_aliases.setdefault('dio_master', None)
+        self.site_aliases.setdefault('ai_sites', [])
+        self.site_aliases.setdefault('ao_sites', [])
+        self.site_aliases.setdefault('dio_sites', [])
 
-        for site in SITES:
+        def init_site(site):
             try:
-
                 new_site = Site(self.addr, site.value)
 
-                self.site_indexes[site.value] = new_site
-                self.site_aliases[site.name] = new_site
+                with self.lock:
+                    self.site_indexes[site.value] = new_site
+                    self.site_aliases[site.name] = new_site
+                    new_site.carrier = self
 
-                if site.value == 0:
-                    if not self.ioc_ready: raise IOCNotReadyError(f"{self.addr} IOC not Ready")
-                    self.site_aliases['carrier'] = new_site
-                    mgt_sites = dict(zip(self.mgt_sites, ['mgtA', 'mgtB']))
-                    wr_site = dict(zip(self.wr_site, ['wr']))
-                    hudp_site = dict(zip(self.hudp_site, ['hudp']))
+                    if site.value in self.mgt_sites:
+                        self.site_aliases[self.mgt_sites[site.value]] = new_site
 
-                if site.value in mgt_sites:
-                    self.site_aliases[mgt_sites[site.value]] = new_site
+                    if site.value in self.wr_site:
+                        self.site_aliases[self.wr_site[site.value]] = new_site
 
-                if site.value in wr_site:
-                    self.site_aliases[wr_site[site.value]] = new_site
+                    if site.value in self.hudp_site:
+                        self.site_aliases[self.hudp_site[site.value]] = new_site
 
-                if site.value in hudp_site:
-                    self.site_aliases[hudp_site[site.value]] = new_site
+                    if new_site.is_ai:
+                        self.site_aliases['ai_sites'].append(new_site)
 
-                if new_site.is_ai:
-                    self.site_aliases.setdefault('ai_sites', [])
-                    self.site_aliases['ai_sites'].append(new_site)
+                        if not self.ai_master and new_site.is_master:
+                            self.site_aliases['ai_master'] = new_site
+                            logging.debug(f"{self.addr}.{site} is ai master")
 
-                    if not self.ai_master and new_site.is_master:
-                        self.site_aliases['ai_master'] = new_site
-                        logging.debug(f"{self.addr}.{site} is ai master")
+                    if new_site.is_ao:
+                        self.site_aliases['ao_sites'].append(new_site)
 
-                if new_site.is_ao:
-                    self.site_aliases.setdefault('ao_sites', [])
-                    self.site_aliases['ao_sites'].append(new_site)
+                        if not self.ao_master and new_site.is_master:
+                            self.site_aliases['ao_master'] = new_site
+                            logging.debug(f"{self.addr}.{site} is ao master")
+                    
+                    if new_site.is_dio:
+                        self.site_aliases['dio_sites'].append(new_site)
 
-                    if not self.ao_master and new_site.is_master:
-                        self.site_aliases['ao_master'] = new_site
-                        logging.debug(f"{self.addr}.{site} is ao master")
-                
-                if new_site.is_dio:
-                    self.site_aliases.setdefault('dio_sites', [])
-                    self.site_aliases['dio_sites'].append(new_site)
-
-                    if not self.dio_master and new_site.is_master:
-                        self.site_aliases['dio_master'] = new_site
-                        logging.debug(f"{self.addr}.{site} is dio master")
-
-                new_site.carrier = self
+                        if not self.dio_master and new_site.is_master:
+                            self.site_aliases['dio_master'] = new_site
+                            logging.debug(f"{self.addr}.{site} is dio master")
 
             except ConnectionRefusedError:
                 logging.debug(f"{self.addr}.{site} Not available")
             except socket.gaierror:
                 logging.error(f"{self.addr} is not reachable")
                 raise
+
+        init_site(SITES.s0)
+
+        threads = []
+        for site in SITES:
+            if site == SITES.s0: continue
+            thread = RThread(target=init_site, args=(site,))
+            thread.start()
+            threads.append(thread)
+        
+        for thread in threads:
+            thread.join()
+
 
     # Attribute methods
 
@@ -224,22 +230,24 @@ class Carrier:
 
     @cached_property
     def wr_site(self):
-        """Return White rabbit sites"""
-        sites = self.s0.get('has_wr', 'NONE').upper()
-        if sites == 'NONE': return []
-        return list(map(int, sites.split(' ')))
-    
+        """Return White rabbit site"""
+        value = self.s0.get('has_wr', 'none')
+        if value == 'none': return {}
+        return dict(zip(map(int, value.split()), ['wr']))
+
     @cached_property
     def hudp_site(self):
-        sites = self.s0.get('has_hudp', 'NONE').upper()
-        if sites == 'NONE': return []
-        return list(map(int, sites.split(' ')))
+        """Return HUDP site"""
+        value = self.s0.get('has_hudp', 'none')
+        if value == 'none': return {}
+        return dict(zip(map(int, value.split()), ['hudp']))
 
     @cached_property
     def mgt_sites(self):
-        sites = self.s0.get('has_mgt', 'NONE').upper()
-        if sites == 'NONE': return []
-        return list(map(int, sites.split(' ')))
+        """Return MGT sites"""
+        value = self.s0.get('has_mgt', 'none')
+        if value == 'none': return {}
+        return dict(zip(map(int, value.split()), ['mgtA', 'mgtB']))
 
     @property
     def has_ai(self):
