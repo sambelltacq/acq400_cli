@@ -4,7 +4,9 @@ import os
 import sys
 
 from acq400_cli.logger import Logger
-logger = Logger.configure(level=os.environ.get('ACQ400_LEVEL', 'INFO'), logger_name=__name__)
+
+loglevel = 'TRACE' if os.environ.get('SITECLIENT_TRACE') == '1' else os.environ.get('ACQ400_LOGLEVEL', 'INFO')
+logger = Logger.configure(level=loglevel, logger_name=__name__)
 logger.debug(f"Command: {' '.join(sys.argv)}")
 
 from acq400_cli.uut import Carrier, Collection
