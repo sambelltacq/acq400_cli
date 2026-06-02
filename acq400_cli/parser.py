@@ -34,9 +34,10 @@ class ArgTypes:
         return channels
 
     @staticmethod
-    def si_numeral(arg):
-        prefixes = {
-            "K": 1e3,
+    def int_with_unit(value):
+        """Converts values with units to intergers"""
+        units = {
+            "k": 1e3,
             "M": 1e6,
             "G": 1e9,
             "kB": 1024,
@@ -45,13 +46,12 @@ class ArgTypes:
         }
 
         scaler = 1
-        num = arg
-        for prefix in sorted(prefixes, key=len, reverse=True):
-            if arg.upper().endswith(prefix):
-                scaler = prefixes.get(prefix, 1)
-                num = arg[:-len(prefix)]
+        for unit in units:
+            if value.lower().endswith(unit.lower()):
+                scaler = units.get(unit, 1)
+                value = value[:-len(unit)]
                 break
-        return int(float(num) * scaler)
+        return int(float(value) * scaler)
 
     @staticmethod
     def list_of_triplets_old(triplets): #TODO remove me
@@ -67,6 +67,19 @@ class ArgTypes:
         arg = arg.split(',')
         if not len(arg) == 3: raise ValueError
         return Triplet(arg)
+
+    @staticmethod
+    def start_end_stride(value, default=(0, None, 1)):
+        """Parses start:end:stride arg into tuple"""
+        parts = value.strip().split(':')
+        start = ArgTypes.int_with_unit(parts[0]) if parts and parts[0] else default[0]
+        end = ArgTypes.int_with_unit(parts[1]) if len(parts) > 1 and parts[1] else default[1]
+        stride = ArgTypes.int_with_unit(parts[2]) if len(parts) > 2 and parts[2] else default[2]
+        if stride <= 0:
+            raise argparse.ArgumentTypeError("stride must be greater than 0")
+        if end is not None and end <= start:
+            raise argparse.ArgumentTypeError("end must be greater than start")
+        return (start, end, stride)
 
     @staticmethod
     def trigger(arg):
@@ -90,18 +103,21 @@ class ArgTypes:
         enabled = 1 if length > 0 else 0
         return f"{enabled},{length},0"
 
-class CustomParser(argparse.ArgumentParser):
-    pass
-        
+class ArgParser(argparse.ArgumentParser):
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault('formatter_class', argparse.ArgumentDefaultsHelpFormatter)
+        kwargs.setdefault('add_help', False)
+        super().__init__(*args, **kwargs)
+        self.add_argument('-h', '--help', action='help', help=argparse.SUPPRESS)
+
+
 
 
 def get_parser():
-    parser = CustomParser(
+    parser = ArgParser(
         prog='acq400_cli',
         description='ACQ400 Regression Testing Framework',
-        add_help=False
     )
-    parser.add_argument('-h', '--help', action='help', help=argparse.SUPPRESS)
     subparsers = parser.add_subparsers(dest='command', help='Available commands', required=True)
     
 

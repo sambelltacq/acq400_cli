@@ -52,14 +52,14 @@ def get_parser():
 
     parser.add_argument('--trigger', default='1,1,1', type=ArgTypes.trigger, help='Capture Trigger')
     parser.add_argument('--rgm', default='0,0,0', type=ArgTypes.triplet, help='RGM triplet')
-    parser.add_argument('--translen', default=0, type=ArgTypes.si_numeral, help='Translen value')
+    parser.add_argument('--translen', default=0, type=ArgTypes.int_with_unit, help='Translen value')
     parser.add_argument('--stream_mask', default=None, type=ArgTypes.list_of_channels, help='Stream mask channels')
 
     parser.add_argument('--seconds', default=10, type=int, help='Total seconds to stream')
-    parser.add_argument('--bytes', default=None, type=ArgTypes.si_numeral, help='Total bytes to stream')
+    parser.add_argument('--bytes', default=None, type=ArgTypes.int_with_unit, help='Total bytes to stream')
     parser.add_argument('--samples', default=None, type=int, help='Total samples to stream')
 
-    parser.add_argument('--filebytes', default=None, type=ArgTypes.si_numeral, help='Max filesize in bytes')
+    parser.add_argument('--filebytes', default=None, type=ArgTypes.int_with_unit, help='Max filesize in bytes')
     parser.add_argument('--filesamples', default=None, type=int, help='Max filesize in samples')
 
     parser.add_argument('--savedir', default="DATA", help='Save dir')

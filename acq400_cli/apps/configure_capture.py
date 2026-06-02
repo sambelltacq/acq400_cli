@@ -28,8 +28,8 @@ def main(args):
 def get_parser():
     parser = argparse.ArgumentParser(description='Configure capture on UUTs')
 
-    parser.add_argument('--pre', default=0, type=ArgTypes.si_numeral, help='Pre samples')
-    parser.add_argument('--post', default=0, type=ArgTypes.si_numeral, help='Post samples')
+    parser.add_argument('--pre', default=0, type=ArgTypes.int_with_unit, help='Pre samples')
+    parser.add_argument('--post', default=0, type=ArgTypes.int_with_unit, help='Post samples')
     parser.add_argument('--trigger', default='0,0,0', type=ArgTypes.trigger, help='Capture Trigger')
     parser.add_argument('--event0', default='0,0,0', type=ArgTypes.triplet, help='Capture Event0')
     parser.add_argument('--event1', default='0,0,0', type=ArgTypes.triplet, help='Capture Event1')

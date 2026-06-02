@@ -35,7 +35,7 @@ def get_parser():
 
     parser.add_argument('--mrole', default='master', help='Master role')
     parser.add_argument('--srole', default='slave', help='Slave role')
-    parser.add_argument('--clk', required=True, type=ArgTypes.si_numeral, help='Clock frequency')
+    parser.add_argument('--clk', required=True, type=ArgTypes.int_with_unit, help='Clock frequency')
     
     parser.add_argument('uutnames', nargs='+', help="uut hostnames")
     return parser
