@@ -4,26 +4,20 @@
 
 import argparse
 
-from acq400_cli import ArgTypes, plot_by_carrier
-from acq400_cli.data import UUTData
-
+from acq400_cli import ArgTypes
+from acq400_cli.data import demux_datafile
 
 def main(args):
-    print(args)
-    print("no worky :(")
-
     for filename in args.filenames:
-        print(filename)
-        data = UUTData.from_file(filename)
-        print(data)
-    
+        save_dir = demux_datafile(filename)
+        print(f"Demuxed {filename} --> {save_dir}")
 
 def get_parser():
     parser = argparse.ArgumentParser(description='Demux datafiles into channels')
-
-    parser.add_argument('--savedir', default="DEMUXED_DATA", help='Save dir')
-
-    parser.add_argument('filenames', nargs='+', help='Datfiles')
+    parser.add_argument('--savedir', default='DEMUXED_DATA', help='Dir to save demuxed dir to')
+    parser.add_argument('--chunk_samples', type=int, default=1000000, help='Samples per chunk')
+    parser.add_argument('--max_samples', default=None, type=ArgTypes.si_numeral, help='Max samples to demux')
+    parser.add_argument('filenames', nargs='+', help='data filenames')
     return parser
 
 
