@@ -106,16 +106,23 @@ class StreamDataFile(io.BufferedWriter):
             offset += n
         return nbytes
 
-def gen_data_filename(hostname, format, timestamp=None, seq=None, **kwargs):
+def gen_data_filename(hostname, format, timestamp=None, sequence=None, **kwargs):
     """Generate dat filename"""
     parts = [hostname]
     if timestamp: parts.append(timestamp)
     parts.append(format)
-    if seq is not None: parts.append(f"{seq:03}")
+    if sequence is not None: parts.append(f"{sequence:03}")
     return '.'.join(parts) + '.dat'
 
 def parse_filename_parts(filepath):
-    parts = DotDict({})
+    parts = DotDict({
+        'hostname': None,
+        'timestamp': None,
+        'format': None,
+        'sequence': None,
+        'channel': None,
+        'size': None,
+    })
     filename = os.path.splitext(os.path.basename(filepath))[0]
 
     for part in filename.split('.'):
@@ -128,6 +135,8 @@ def parse_filename_parts(filepath):
             parts.format = part
         elif part.isnumeric():
             parts.sequence = part
+        elif part.endswith('B'):
+            parts.size = int(part.removesuffix('B'))
     return parts
 
 def generate_array_mask(length, indexes, width=1):
@@ -154,3 +163,49 @@ def find_event_signatures(data):
             indexes = np.where(chan == es)[0]
             if len(indexes) > 0: return indexes
     return []
+
+def demux_datafile(data_file, rootdir="DEMUXED_DATA", chunk_samples=1000000, max_samples=None):
+    """Demux datafile channels into dir"""
+
+    parts = parse_filename_parts(data_file)
+    sample_format = SampleFormatFromTag(parts.format)
+    file_size = os.path.getsize(data_file)
+    file_samples = file_size // sample_format.bytes
+    save_dir = os.path.join(rootdir, os.path.splitext(os.path.basename(data_file))[0])
+
+    os.makedirs(save_dir, exist_ok=True)
+
+    data = np.memmap(
+        data_file,
+        dtype=sample_format.dtype,
+        mode='r',
+        shape=(file_samples,),
+    )
+
+    handles = {}
+    for logical_chan, channel in sample_format.channels.items():
+        filename = f"CH{logical_chan:03d}.{channel['chan_size']}B.dat"
+        save_path = os.path.join(save_dir, filename)
+        handles[logical_chan] = open(save_path, 'wb')
+
+    try:
+        max_samples = min(max_samples, file_samples) if max_samples else file_samples
+        for start in range(0, max_samples, chunk_samples):
+            end = min(start + chunk_samples, max_samples)
+            for logical_chan in sample_format.channels:
+                handles[logical_chan].write(data[start:end][str(logical_chan)].tobytes())
+            logging.info(f"Demuxing {end}/{max_samples} Samples")
+    finally:
+        for fp in handles.values():
+            fp.close()
+
+    return save_dir
+
+
+
+
+
+
+
+
+
