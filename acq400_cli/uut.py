@@ -665,7 +665,7 @@ class Carrier:
         mode = 'on' if enable else 'off'
         spad_en = int(self.spad_length > 0)
         for idx, name in self.mgt_sites.items():
-            logging.error(f"Comm site {name} {mode}")
+            logging.debug(f"Comm site {name} {mode}")
             self[idx].aggregator = f"sites={self.aggregator.sites} spad={spad_en} {mode}"
             if decimate: self[idx].decimate = decimate
 
