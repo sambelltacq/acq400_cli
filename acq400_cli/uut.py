@@ -209,11 +209,11 @@ class Carrier:
 
     @property
     def aggregator(self):
-        return dict(part.split("=", 1) for part in self.s0.aggregator.split())
+        return DotDict(part.split("=", 1) for part in self.s0.aggregator.split())
     
     @property
     def distributor(self):
-        return dict(part.split("=", 1) for part in self.s0.distributor.split())
+        return DotDict(part.split("=", 1) for part in self.s0.distributor.split())
 
     @property
     def agg_sites(self):
@@ -659,7 +659,15 @@ class Carrier:
         missed = '' if self.status.spad0_chan is None else f"({self.status.missed:,})"
         return f"{self.hostname} [{self.cstate.name}] {runtime}s {current:,} / {target:,} {missed}"
 
-
+    def set_mgt_agg(self, enable=True, decimate=None):
+        """Set MGT aggregator"""
+        mode = 'on' if enable else 'off'
+        spad_en = int(self.spad_length > 0)
+        for idx, name in self.mgt_sites.items():
+            logging.error(f"Comm site {name} {mode}")
+            self[idx].aggregator = f"sites={self.aggregator.sites} spad={spad_en} {mode}"
+            if decimate: self[idx].decimate = decimate
+            print(self[idx].aggregator)
 
 
 
