@@ -150,6 +150,15 @@ def bitmask_to_chans(mask):
     mask = int(mask, 16)
     return [i + 1 for i in range(mask.bit_length()) if mask & (1 << i)]
 
+def background_task(func):
+    """Runs passed func in the background returns thread"""
+    def wrapper(*args, **kwargs):
+        thread = RThread(target=func, args=args, kwargs=kwargs)
+        thread.daemon = True
+        thread.start()
+        return thread
+    return wrapper
+
 def run_on_all_uuts(func):
     """Run decorated function on all UUTs"""
     sig = inspect.signature(func)
