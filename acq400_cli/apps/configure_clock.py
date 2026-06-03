@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
 """
-Config CLK and HDMI on UUTS
+Config CLK and HDMI on UUTs
 """
 
-import argparse
-from acq400_cli import ArgTypes, Collection
+from acq400_cli import ArgTypes, ArgParser, Collection
 
 def main(args):
 
@@ -31,7 +30,7 @@ def main(args):
     print(uuts.tree)
 
 def get_parser():
-    parser = argparse.ArgumentParser(description='Config CLK and HDMI on UUTS')
+    parser = ArgParser(description='Config CLK and HDMI on UUTs')
 
     parser.add_argument('--mrole', default='master', help='Master role')
     parser.add_argument('--srole', default='slave', help='Slave role')

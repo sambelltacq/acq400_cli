@@ -4,16 +4,16 @@
 Abort capture on UUTs
 """
 
-import argparse
-from acq400_cli import Collection
+from acq400_cli import Collection, ArgParser
 
 def main(args):
     uuts = Collection(args.uutnames)
+    print(f"Aborting capture {uuts.names}")
     uuts.abort_capture()
     print(f"Capture Aborted {uuts.names}")
 
 def get_parser():
-    parser = argparse.ArgumentParser(description='Abort capture')
+    parser = ArgParser(description='Abort capture')
     parser.add_argument('uutnames', nargs='+', help="uut hostnames")
     return parser
 

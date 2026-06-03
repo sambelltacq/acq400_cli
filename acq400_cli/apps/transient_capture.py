@@ -4,9 +4,8 @@
 Capture transient data on UUTs
 """
 
-import argparse
 import os
-from acq400_cli import ArgTypes, Collection, SignalGenerator, generate_timestamp, plot_by_carrier
+from acq400_cli import ArgTypes, Collection, SignalGenerator, ArgParser, generate_timestamp, plot_by_carrier
 
 def main(args):
     
@@ -54,7 +53,7 @@ def main(args):
 
 
 def get_parser():
-    parser = argparse.ArgumentParser(description='Capture transient data on UUTs')
+    parser = ArgParser(description='Capture transient data on UUTs')
 
     parser.add_argument('--pre', default=0, type=ArgTypes.int_with_unit, help='Pre samples')
     parser.add_argument('--post', default=100000, type=ArgTypes.int_with_unit, help='Post samples')

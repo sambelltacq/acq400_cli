@@ -4,8 +4,7 @@
 Wait for UUTs to reach STATE
 """
 
-import argparse
-from acq400_cli import Collection, CAPTURE_STATE
+from acq400_cli import Collection, CAPTURE_STATE, ArgParser
 
 def main(args):
     uuts = Collection(args.uutnames)
@@ -14,7 +13,7 @@ def main(args):
     print(f"Reached {args.state} {uuts.names}")
 
 def get_parser():
-    parser = argparse.ArgumentParser(description='Wait for UUTs to reach STATE')
+    parser = ArgParser(description='Wait for UUTs to reach STATE')
     state_names = [m.name for m in CAPTURE_STATE]
     parser.add_argument('--timeout', default=0, type=int, help='Timeout before error')
     parser.add_argument('--state', choices=state_names, required=True, help=f"State to wait for")

@@ -4,8 +4,7 @@
 Configure sites on UUTs
 """
 
-import argparse
-from acq400_cli import ArgTypes, Collection
+from acq400_cli import ArgTypes, ArgParser, Collection
 
 def main(args):
     uuts = Collection(args.uutnames)
@@ -19,7 +18,7 @@ def main(args):
         print(f"  {uutname} Sample {sample_format.tag} {sample_format.bytes} Bytes")
 
 def get_parser():
-    parser = argparse.ArgumentParser(description='Configure sites on UUTs')
+    parser = ArgParser(description='Configure sites on UUTs')
 
     parser.add_argument('--spad', default=None, type=ArgTypes.spad, help='Spad length')
     parser.add_argument('--sites', default=None, help='run0 sites (1,2,3 or ALL)')

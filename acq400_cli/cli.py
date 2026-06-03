@@ -1,11 +1,10 @@
 """Entry point for the acq400_cli package"""
 
+import argparse
 import importlib
 import logging
 import pkgutil
 import sys
-
-from acq400_cli.parser import CustomParser
 
 APPS_PATH = "acq400_cli.apps"
 
@@ -13,7 +12,8 @@ APPS_PATH = "acq400_cli.apps"
 
 
 def main():
-    parser = CustomParser(
+    # Plain parser: no -h/--help so app-level --help reaches the app parser.
+    parser = argparse.ArgumentParser(
         description="ACQ400 Command Line Interface",
         prog="acq400_cli",
         add_help=False,

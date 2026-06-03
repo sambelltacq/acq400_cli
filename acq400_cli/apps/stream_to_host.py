@@ -7,8 +7,7 @@ Usage:
     acq400_cli stream_to_host --stream_mask=1-4,33 --filesamples=1000000 --overwrite --hexdump acq2106_054
 """
 
-import argparse
-from acq400_cli import ArgTypes, Collection, SignalGenerator, StreamClient
+from acq400_cli import ArgTypes, Collection, SignalGenerator, StreamClient, ArgParser
 
 def main(args):
     uuts = Collection(args.uutnames)
@@ -49,7 +48,7 @@ def main(args):
 
 
 def get_parser():
-    parser = argparse.ArgumentParser(description='Stream data from UUTs to host')
+    parser = ArgParser(description='Stream data from UUTs to host')
 
     parser.add_argument('--trigger', default='1,1,1', type=ArgTypes.trigger, help='Capture Trigger')
     parser.add_argument('--rgm', default='0,0,0', type=ArgTypes.triplet, help='RGM triplet')

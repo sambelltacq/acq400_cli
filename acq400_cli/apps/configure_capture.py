@@ -4,8 +4,7 @@
 Configure capture on UUTs
 """
 
-import argparse
-from acq400_cli import ArgTypes, Collection
+from acq400_cli import ArgTypes, Collection, ArgParser
 
 def main(args):
     uuts = Collection(args.uutnames)
@@ -26,7 +25,7 @@ def main(args):
     print(f"Capture Configured {uuts.names}")
 
 def get_parser():
-    parser = argparse.ArgumentParser(description='Configure capture on UUTs')
+    parser = ArgParser(description='Configure capture on UUTs')
 
     parser.add_argument('--pre', default=0, type=ArgTypes.int_with_unit, help='Pre samples')
     parser.add_argument('--post', default=0, type=ArgTypes.int_with_unit, help='Post samples')
@@ -35,7 +34,7 @@ def get_parser():
     parser.add_argument('--event1', default='0,0,0', type=ArgTypes.triplet, help='Capture Event1')
     parser.add_argument('--rgm', default='0,0,0', type=ArgTypes.triplet, help='RGM triplet')
     parser.add_argument('--translen', default=0, type=int, help='Translen value')
-    parser.add_argument('--demux', action='store_true', help='Demux data (default: False)')
+    parser.add_argument('--demux', action='store_true', help='Demux data')
     parser.add_argument('--stream_mask', default=None, type=ArgTypes.list_of_channels, help='Stream mask channels')
     parser.add_argument('--spad', default=None, type=ArgTypes.spad, help='Spad length')
     parser.add_argument('--sites', default=None, help='run0 sites (1,2,3 or ALL)')
