@@ -42,7 +42,7 @@ def main(args):
         bytes=args.bytes
     )
 
-    stream.trigger_when_armed(trigger=args.trigger, siggen=siggen)
+    uuts.trigger_when_armed(siggen=siggen)
 
     stream.print_status()
 

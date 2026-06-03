@@ -10,7 +10,7 @@ import threading
 import numpy as np
 from functools import cached_property
 
-from acq400_cli.utils import Triplet, chans_to_bitmask, bitmask_to_chans, FanoutProxy, DotDict, RThread, StopWatch
+from acq400_cli.utils import Triplet, background_task, chans_to_bitmask, bitmask_to_chans, FanoutProxy, DotDict, RThread, StopWatch
 from acq400_cli.constants import PORTS, SITES, CAPTURE_STATE, TRG_LINE, MAX_ETH_RATE
 from acq400_cli.exception import IOCNotReadyError
 from acq400_cli.sample import TransientSample, StreamSample
@@ -760,6 +760,14 @@ class Collection(list):
 
         self.masters.wait_for_complete()
         self.slaves.wait_for_complete()
+
+    @background_task
+    def trigger_when_armed(self, siggen=None, timeout=30):
+        """Trigger capture when all UUTs are ARMED"""
+        print("Waiting for ARM")
+        self._proxy.wait_for_arm(timeout)
+        print("Armed")
+        self._proxy.trigger_capture(siggen)
 
 
     # Attribute methods

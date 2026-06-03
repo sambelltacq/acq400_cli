@@ -118,21 +118,6 @@ class StreamClient():
             self.streams[uutname] = RThread(target=wrapper, args=(uut,))
             self.streams[uutname].start()
 
-    def trigger_when_armed(self, trigger=None, siggen=None):
-        """Trigger UUTs when ARMED"""
-        def wrapper():
-            print("Waiting for ARM")
-            self.uuts.wait_for_arm(timeout=30)
-            print("Armed")
-            if trigger and trigger.line == 1: 
-                logging.info(f'Soft triggering')
-                self.uuts.trigger_soft_trigger()
-            elif siggen:
-                logging.info(f'Triggering {siggen}')
-                siggen.trigger()
-
-        thread = RThread(target=wrapper, daemon=True)
-        thread.start()
 
     def finshed(self):
         """True if streams finshed else False"""
