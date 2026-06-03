@@ -301,6 +301,11 @@ class Carrier:
     def rgm_enabled(self):
         return Triplet(self.s1.rgm).enabled == 1
 
+    @property
+    def trigger_line(self):
+        """Return trigger line int"""
+        return int(self.ai_master.TRG__DX.removeprefix('d'))
+
     @cached_property
     def fpga(self):
         """Return fpga and timestamp"""
@@ -549,17 +554,53 @@ class Carrier:
         line = site if site else self.ai_master.site
         self.s0.spad1_us = f"{enabled},{line},{sense}"
 
-    def set_trigger_source(self, source):
-        """Set trigger source in"""
-        source = source.upper()
-        line = TRG_LINE[source]
-        if line.value == 0: self.s0.SIG__SRC__TRG__0 = source
-        if line.value == 1: self.s0.SIG__SRC__TRG__1 = source
+    def set_trigger_source(self, trigger):
+        """Config sync trigger source in"""
+        if not self.is_master: return
+        source = getattr(trigger, 'source', trigger)
+        line = TRG_LINE.__members__.get(source, None)
+        if line is None: return
+        logging.debug(f"Trigger d{line} source is {source}")
 
-    def configure_trigger(self, trigger):
-        print("configure trigger")
-        #self.ai_master.trg
-        #self.
+        if source == 'EXT': self.s0.SIG__SRC__TRG__0 = "EXT"
+        if source == 'HDMI': self.s0.SIG__SRC__TRG__0 = "HDMI"
+        if source == 'WRTT0': self.s0.SIG__SRC__TRG__0 = "WRTT0"
+        if source == 'FREE': self.s0.SIG__SRC__TRG__0 = "NONE"
+        
+        if source == 'INT': self.s0.SIG__SRC__TRG__1 = "STRIG"
+        if source == 'SOFT': self.s0.SIG__SRC__TRG__1 = "STRIG"
+        if source == 'WRTT1': self.s0.SIG__SRC__TRG__1 = "WRTT1"
+
+    def trigger_capture(self, siggen=None):
+        """Trigger capture"""
+
+        if not self.is_master: return
+        trigger_line = self.trigger_line
+
+        if trigger_line == 0:
+            trigger_source = self.s0.SIG__SRC__TRG__0
+            if trigger_source == 'WRTT0':
+                logging.info("Triggering WRTT0")
+                #TODO: how to trigger WR?
+            if trigger_source == 'STRID':
+                logging.info(f'Soft triggering')
+                self.trigger_soft_trigger()
+
+
+        if trigger_line == 1:
+            trigger_source = self.s0.SIG__SRC__TRG__1
+            if trigger_source == 'WRTT1': 
+                logging.info("Triggering WRTT1")
+                #TODO: how to trigger WR?
+            if trigger_source == 'NONE':
+                logging.info("Enabling external trigger")
+                self.s0.SIG__SRC__TRG__1 = 'EXT'
+            if trigger_source == 'EXT' and siggen:
+                logging.info(f'Triggering {siggen}')
+                siggen.trigger()
+            if trigger_source == 'HDMI' and siggen:
+                logging.info(f'Triggering {siggen}')
+                siggen.trigger()
 
     def configure_capture(
         self,
@@ -588,6 +629,7 @@ class Carrier:
 
         self.s0.transient = f"PRE={int(pre)} POST={int(post)} SOFT_TRIGGER={auto_soft_trigger} DEMUX={demux}"
         self.ai_master.trg = trigger
+        self.set_trigger_source(trigger)
         self.ai_master.event0 = event0
         self.ai_master.event1 = event1
         self.ai_master.rgm = rgm

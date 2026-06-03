@@ -74,10 +74,13 @@ class CAPTURE_STATE(IntEnum):
     CLEANUP=        5
 
 class TRG_LINE(IntEnum):
-    INT=    1
-    SOFT=   1
     EXT=    0
     HDMI=   0
+    WRTT0=  0
+    FREE=   0
+    INT=    1
+    SOFT=   1
+    WRTT1=  1
 
 class SENSE(IntEnum):
     FALLING=    0
