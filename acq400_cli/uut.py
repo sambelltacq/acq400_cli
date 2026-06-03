@@ -368,7 +368,8 @@ class Carrier:
         t0 = time.time()
         while self.capture_state != target_state:
             t1 = time.time() - t0
-            if timeout and t1 > timeout: raise TimeoutError(f'{self.addr} failed to reach {target_state.name} after {timeout}s')
+            if timeout and t1 > timeout: 
+                raise TimeoutError(f'{self.addr} failed to reach {target_state.name} after {timeout}s stuck in {self.capture_state.name}')
             time.sleep(1)
         logging.debug(f"{self.addr} reached {target_state.name}")
 
@@ -667,7 +668,6 @@ class Carrier:
             logging.error(f"Comm site {name} {mode}")
             self[idx].aggregator = f"sites={self.aggregator.sites} spad={spad_en} {mode}"
             if decimate: self[idx].decimate = decimate
-            print(self[idx].aggregator)
 
 
 
