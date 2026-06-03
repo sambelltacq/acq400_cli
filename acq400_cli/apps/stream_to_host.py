@@ -32,7 +32,8 @@ def main(args):
         filebytes=args.filebytes,
         filesamples=args.filesamples,
         overwrite=args.overwrite,
-        hexdump=args.hexdump
+        hexdump=args.hexdump,
+        save=True,
     )
 
     print(f"Start stream {uuts.names}")
