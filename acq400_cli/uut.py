@@ -270,16 +270,6 @@ class Carrier:
         return round(float(clk), -3)
 
     @property
-    def transient_format(self):
-        """Return the current transient sample format"""
-        return TransientSample(self)
-
-    @property
-    def stream_format(self):
-        """Return the current stream sample format"""
-        return StreamSample(self)
-
-    @property
     def data_rate(self):
         """Return the data rate sans mask"""
         return (int(self.s0.ssb) * self.sample_rate) / 1_000_000

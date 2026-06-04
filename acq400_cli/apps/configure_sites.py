@@ -14,7 +14,7 @@ def main(args):
     uuts.ident_spad(args.ident)
     uuts.set_spad1_count(args.us)
 
-    for uutname, sample_format in uuts.transient_format.items():
+    for uutname, sample_format in uuts.stream_sample_format.items():
         print(f"  {uutname} Sample {sample_format.tag} {sample_format.bytes} Bytes")
 
 def get_parser():
