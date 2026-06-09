@@ -3,6 +3,7 @@ import atexit
 import logging
 import socket
 import re
+import time
 
 from acq400_cli.exception import KnobNotFoundError
 from acq400_cli.constants import PORTS
@@ -129,3 +130,70 @@ class StreamClient():
             for status in self.uuts.get_stream_status().values():
                 if status is not None:
                     print(status)
+
+class StatusMontior:
+    """Monitor status in background"""
+
+    def __init__(self, addr):
+        self.addr = addr
+        self.port = 2227
+        self.lock = threading.Lock()
+        self.sock = None
+        self.online = True
+
+        self._status = {
+            'state': 0,
+            'pre': 0,
+            'post': 0,
+            'elapsed': 0,
+            'extra': 0,
+        }
+
+        atexit.register(self.close)
+        threading.Thread(target=self.__monitor, daemon=True).start()
+
+    def __getattr__(self, key):
+        if key in self._status:
+            with self.lock:
+                return self._status[key]
+        return super().__getattr__(key)
+
+    def close(self):
+        """Close socket"""
+        if self.sock:
+            self.sock.close()
+            self.sock = None
+
+    def __monitor(self):
+        rate = 1
+        last = None
+        last_update = time.time()
+
+        self.close()
+        sock = socket.socket()
+        sock.connect((self.addr, self.port))
+        try:
+            while True:
+                line = sock.recv(200).strip()
+
+                if not line: break
+                if not line.startswith(b'STX'): continue
+                
+                now = time.time()
+                if last == line[:5] and now - last_update < rate: continue
+
+                state, pre, post, elapsed, extra = line.decode().split(' ')[1:]
+                with self.lock:
+                    self._status['state'] = state
+                    self._status['pre'] = pre
+                    self._status['post'] = post
+                    self._status['elapsed'] = elapsed
+                    self._status['extra'] = extra
+
+                last = line[:5]
+                last_update = now
+        except Exception: pass
+        
+        logging.debug(f"{self.addr} monitor disconnected")
+        self.online = False
+        self.close()
