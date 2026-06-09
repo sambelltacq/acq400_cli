@@ -268,6 +268,14 @@ class Carrier:
         return round(float(clk), -3)
 
     @property
+    def rtm_translen(self):
+        """rtm_translen"""
+        RTM_TRANSLEN = int(self.ai_master.RTM_TRANSLEN)
+        rtm_translen = int(self.ai_master.rtm_translen)
+        if rtm_translen == 16777216: return 0
+        return RTM_TRANSLEN
+
+    @property
     def data_rate(self):
         """Return the data rate sans mask"""
         return (int(self.s0.ssb) * self.sample_rate) / 1_000_000
@@ -700,6 +708,10 @@ class Carrier:
             logging.debug(f"Comm site {name} {mode}")
             self[idx].aggregator = f"sites={self.aggregator.sites} spad={spad_en} {mode}"
             if decimate: self[idx].decimate = decimate
+
+    def get_translen_period(self, ajust=1):
+        """return ideal translen period in seconds"""
+        return self.rtm_translen * ajust / self.sample_rate
 
 
 
