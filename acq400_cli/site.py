@@ -206,6 +206,21 @@ class Site:
         """Return number of channels"""
         return int(self.active_chan)
 
+    @cached_property
+    def vmax(self):
+        """Return voltage max"""
+        if not self.is_ai: return 0 
+        PART_NUM = self.PART_NUM
+
+        match = re.search('([.\d]+)V', PART_NUM)
+        if match: return int((match.group(1)))
+   
+        if PART_NUM.find('2V5') >= 0: return 2.5
+        if PART_NUM.find('ER') >= 0: return 20
+        if PART_NUM.startswith('ACQ480'): return 2.5
+
+        return 10
+
     @property
     def spec(self):
 

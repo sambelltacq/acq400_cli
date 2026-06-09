@@ -268,6 +268,11 @@ class Carrier:
         return round(float(clk), -3)
 
     @property
+    def vmax(self,):
+        """master voltage maximum"""
+        return self.ai_master.vmax
+
+    @property
     def rtm_translen(self):
         """rtm_translen"""
         RTM_TRANSLEN = int(self.ai_master.RTM_TRANSLEN)
