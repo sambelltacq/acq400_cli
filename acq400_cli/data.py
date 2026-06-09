@@ -23,20 +23,19 @@ class UUTData(np.ndarray):
         obj = np.asanyarray(input_array).view(cls)
         obj.sample_format = sample_format
         obj.channels = {chan: obj[str(chan)].view(np.ndarray) for chan in sample_format.channels}
-        obj.adc = {chan: obj[str(chan)] for chan in sample_format.types.get('ADC', [])}
-        obj.dio = {chan: obj[str(chan)] for chan in sample_format.types.get('DIO', [])}
-        obj.spd = {idx: obj[str(chan)] for idx, chan in enumerate(sample_format.types.get('SPD', []))}
+        obj.adc = {chan: obj[str(chan)].view(np.ndarray) for chan in sample_format.types.get('ADC', [])}
+        obj.dio = {chan: obj[str(chan)].view(np.ndarray) for chan in sample_format.types.get('DIO', [])}
+        obj.spd = {idx: obj[str(chan)].view(np.ndarray) for idx, chan in enumerate(sample_format.types.get('SPD', []))}
         obj.samples = obj.view(np.ndarray)
         obj.length = len(obj.samples)
 
         return obj
 
     def __str__(self):
-        if not hasattr(self, "sample_format"): return np.ndarray.__str__(self)
         return f"<UUT Data {len(self)} Samples x {self.sample_format.tag} ({self.sample_format.bytes} Bytes)>"
 
     @classmethod
-    def from_file(cls, filepath):
+    def from_file(cls, filepath, max_samples=None):
         """Init from file using memory mapping"""
         
         parts = parse_filename_parts(filepath)
@@ -45,13 +44,14 @@ class UUTData(np.ndarray):
 
         sample_bytes = sample_format.bytes
         file_size = os.path.getsize(filepath)
-        n_samples = file_size // sample_bytes
+        nsamples = file_size // sample_bytes
+        if max_samples: nsamples = min(nsamples, max_samples)
 
         data = np.memmap(
             filepath,
             dtype=sample_format.dtype,
             mode='r',
-            shape=(n_samples,),
+            shape=(nsamples,),
         )
 
         return cls(data, sample_format)
