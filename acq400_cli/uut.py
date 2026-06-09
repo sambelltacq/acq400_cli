@@ -17,6 +17,7 @@ from acq400_cli.sample import TransientSample, StreamSample
 from acq400_cli.data import UUTData, gen_data_filename
 from acq400_cli.site import Site
 from acq400_cli.hdmi import CarrierTree
+from acq400_cli.clients import StatusMontior
 
 
 class Carrier:
@@ -30,6 +31,7 @@ class Carrier:
         self.__build_sites()
         self.hostname = self.s0.HN
         self.status = {}
+        self.status_monitor = StatusMontior(self.addr)
 
     def __getitem__(self, site):
         """Access Site via index notation"""
@@ -179,16 +181,12 @@ class Carrier:
     @property
     def capture_state(self):
         """Get the overall capture state"""
-        tstate = self.tstate
-        cstate = self.cstate
-        if tstate == cstate: return cstate
-        if tstate != CAPTURE_STATE['IDLE']: return tstate
-        if cstate != CAPTURE_STATE['IDLE']: return cstate
+        return CAPTURE_STATE(int(self.status_monitor.state))
 
     @property
     def sample_count(self):
         """Return current sample count"""
-        return int(self.s0.CONTINUOUS__SC) & 0xFFFFFFFF
+        return int(self.status_monitor.elapsed) & 0xFFFFFFFF
 
     @property
     def ioc_ready(self):
