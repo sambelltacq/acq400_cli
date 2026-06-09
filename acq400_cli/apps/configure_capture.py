@@ -9,6 +9,8 @@ from acq400_cli import ArgTypes, Collection, ArgParser
 def main(args):
     uuts = Collection(args.uutnames)
 
+    uuts.wait_for_idle()
+
     uuts.configure_capture(
         pre=args.pre,
         post=args.post,
