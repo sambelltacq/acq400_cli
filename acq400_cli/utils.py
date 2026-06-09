@@ -6,6 +6,7 @@ import time
 import inspect
 import threading
 import logging
+import socket
 
 from acq400_cli.constants import TIMESTAMP_FMT
 
@@ -136,6 +137,51 @@ class StopWatch(list):
         for elapsed, reason in self:
             lines.append(f"{elapsed:.2f}\t{reason}")
         return '\n'.join(lines)
+
+class SigGen:
+    """Send SCPI commands to siggen"""
+    def __init__(self, addr):
+        logging.debug(f"Initing Siggen {addr}")
+        self.addr = addr
+        self.socket = socket.socket()
+        self.socket.connect((self.addr, 5025))
+
+    def send(self, message):
+        logging.trace(message)
+        self.socket.send(f"{message}\n".encode())
+        if message.endswith('?'): return self.socket.recv(100)
+
+    def trigger(self):
+        """Trigger SigGen"""
+        self.send("TRIG")
+        
+    def sync_out(self, enabled=True):
+        """Enable of disable output sync"""
+        self.send(f"OUTP:SYNC {'ON' if enabled else 'OFF'}")
+
+    def config_free_running(self, freq, voltage, shape='SINE'):
+        """Configure free running waveform"""
+        self.send('BURS:STAT OFF')
+        self.send(f"FREQ {freq}")
+        self.send(f"VOLT {voltage}")
+        self.send(f"FUNC:SHAP {shape}")
+        self.send('TRIG:SOUR IMM')
+
+    def config_burst(self, freq, voltage, cycles=1, shape='SINE', period=None, source='BUS'):
+        """Config burst waveform"""
+        self.send('BURS:STAT ON')
+        self.send(f"FREQ {freq}")
+        self.send(f"VOLT {voltage}")
+        self.send(f"FUNC:SHAP {shape}")
+        self.send(f"BURS:NCYC {cycles}")
+        if period: self.send(f"BURS:INT:PER {period}")
+        self.send(f"TRIG:SOUR {source}")
+
+    def config_dc(self, voltage, scaler=2):
+        """Config DC out"""
+        voltage /= scaler
+        self.send("SOUR:FUNC DC")
+        self.send(f"SOUR:VOLT:LEV:IMM:OFFS {voltage}")
 
 def chans_to_bitmask(chans):
     """Converts list of chans to a hex bitmask"""

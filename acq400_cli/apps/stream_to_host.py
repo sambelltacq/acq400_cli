@@ -7,12 +7,12 @@ Usage:
     acq400_cli stream_to_host --stream_mask=1-4,33 --filesamples=1000000 --overwrite --hexdump acq2106_054
 """
 
-from acq400_cli import ArgTypes, Collection, SignalGenerator, StreamClient, ArgParser
+from acq400_cli import ArgTypes, Collection, SigGen, StreamClient, ArgParser
 
 def main(args):
     uuts = Collection(args.uutnames)
 
-    siggen = SignalGenerator(args.siggen) if args.siggen else None
+    siggen = SigGen(args.siggen) if args.siggen else None
 
     uuts.abort_capture()
 

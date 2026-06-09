@@ -5,13 +5,13 @@ Capture transient data on UUTs
 """
 
 import os
-from acq400_cli import ArgTypes, Collection, SignalGenerator, ArgParser, generate_timestamp, plot_by_carrier
+from acq400_cli import ArgTypes, Collection, SigGen, ArgParser, generate_timestamp, plot_by_carrier
 
 def main(args):
     
     uuts = Collection(args.uutnames)
 
-    if args.siggen: siggen = SignalGenerator(args.siggen)
+    if args.siggen: siggen = SigGen(args.siggen)
 
     uuts.abort_capture()
 
