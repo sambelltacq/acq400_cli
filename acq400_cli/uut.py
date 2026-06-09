@@ -344,7 +344,9 @@ class Carrier:
 
     def arm_transient(self):
         """Arm transient capture"""
-        if self.capture_state == CAPTURE_STATE['ARM']: return
+        if self.capture_state == CAPTURE_STATE['ARM']:
+            logging.warning("Not Arming - System aleady ARMED")
+            return
         logging.debug(f"Arming capture {self.hostname}")
         self.s0.set_arm = 1
         
