@@ -8,9 +8,7 @@ import socket
 import time
 import threading
 import numpy as np
-from functools import cached_property
-
-from acq400_cli.utils import Triplet, background_task, chans_to_bitmask, bitmask_to_chans, FanoutProxy, DotDict, RThread, StopWatch
+from acq400_cli.utils import Triplet, background_task, chans_to_bitmask, bitmask_to_chans, FanoutProxy, DotDict, RThread, StopWatch, cached_property
 from acq400_cli.constants import PORTS, SITES, CAPTURE_STATE, TRG_LINE, MAX_ETH_RATE
 from acq400_cli.exception import IOCNotReadyError
 from acq400_cli.sample import TransientSample, StreamSample

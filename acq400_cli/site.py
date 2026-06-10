@@ -21,10 +21,10 @@ import threading
 import socket
 import atexit
 import logging
-from functools import cached_property
 
 from acq400_cli.constants import PORTS
 from acq400_cli.exception import KnobNotFoundError
+from acq400_cli.utils import cached_property
 
 
 class CommandSocket:

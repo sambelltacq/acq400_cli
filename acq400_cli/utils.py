@@ -7,6 +7,7 @@ import inspect
 import threading
 import logging
 import socket
+import weakref
 
 from acq400_cli.constants import TIMESTAMP_FMT
 
@@ -34,6 +35,37 @@ class DotDict(dict):
     __delattr__ = dict.__delitem__
     __getattr__ = dict.__getitem__
     __setattr__ = dict.__setitem__
+
+
+class cached_property:
+    """Instanced functools.cached_property"""
+
+    _instance_locks = weakref.WeakKeyDictionary()
+
+    def __init__(self, func):
+        self.func = func
+        self.attrname = None
+        self.__doc__ = func.__doc__
+
+    def __set_name__(self, owner, name):
+        self.attrname = name
+
+    def _lock(self, instance):
+        locks = self._instance_locks.setdefault(instance, {})
+        return locks.setdefault(self.attrname, threading.Lock())
+
+    def __get__(self, instance, owner=None):
+        if instance is None:
+            return self
+        cache = instance.__dict__
+        if self.attrname in cache:
+            return cache[self.attrname]
+        with self._lock(instance):
+            if self.attrname in cache:
+                return cache[self.attrname]
+            val = self.func(instance)
+            cache[self.attrname] = val
+            return val
 
 
 class RThread(threading.Thread):
