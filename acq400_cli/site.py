@@ -186,6 +186,13 @@ class Site:
             features.append('dio')
         return features
 
+    @cached_property
+    def calibration(self):
+        """Return site calibration"""
+        eslo = map(float, self.AI__CAL__ESLO.split(" ")[2:])
+        eoff = map(float, self.AI__CAL__EOFF.split(" ")[2:])
+        return list(zip(eslo, eoff))
+
     @property
     def role(self):
         """return site role"""

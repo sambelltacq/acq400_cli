@@ -269,6 +269,24 @@ class Carrier:
         """master voltage maximum"""
         return self.ai_master.vmax
 
+    @cached_property
+    def calibration(self):
+        """get channel calibration"""
+        threads = []
+
+        for num, site in sorted(self.ai_sites.items()):
+            thread = RThread(target=getattr, args=(site, 'calibration'))
+            thread.start()
+            threads.append(thread)
+
+        calibration = {}
+        chan = 1
+        for thread in threads:
+            for eslo, eoff in thread.join():
+                calibration[chan] = (eslo, eoff)
+                chan += 1
+        return calibration
+
     @property
     def rtm_translen(self):
         """rtm_translen"""
