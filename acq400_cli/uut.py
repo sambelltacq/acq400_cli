@@ -60,9 +60,9 @@ class Carrier:
         self.site_aliases.setdefault('ai_master', None)
         self.site_aliases.setdefault('ao_master', None)
         self.site_aliases.setdefault('dio_master', None)
-        self.site_aliases.setdefault('ai_sites', [])
-        self.site_aliases.setdefault('ao_sites', [])
-        self.site_aliases.setdefault('dio_sites', [])
+        self.site_aliases.setdefault('ai_sites', {})
+        self.site_aliases.setdefault('ao_sites', {})
+        self.site_aliases.setdefault('dio_sites', {})
 
         def init_site(site):
             try:
@@ -83,21 +83,20 @@ class Carrier:
                         self.site_aliases[self.hudp_site[site.value]] = new_site
 
                     if new_site.is_ai:
-                        self.site_aliases['ai_sites'].append(new_site)
-
+                        self.site_aliases['ai_sites'][site.value] = new_site
                         if not self.ai_master and new_site.is_master:
                             self.site_aliases['ai_master'] = new_site
                             logging.debug(f"{self.addr}.{site} is ai master")
 
                     if new_site.is_ao:
-                        self.site_aliases['ao_sites'].append(new_site)
+                        self.site_aliases['ao_sites'][site.value] = new_site
 
                         if not self.ao_master and new_site.is_master:
                             self.site_aliases['ao_master'] = new_site
                             logging.debug(f"{self.addr}.{site} is ao master")
                     
                     if new_site.is_dio:
-                        self.site_aliases['dio_sites'].append(new_site)
+                        self.site_aliases['dio_sites'][site.value] = new_site
 
                         if not self.dio_master and new_site.is_master:
                             self.site_aliases['dio_master'] = new_site
