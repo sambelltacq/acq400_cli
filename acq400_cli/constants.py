@@ -8,7 +8,23 @@ TIMESTAMP_FMT = "%y-%m-%d_%H-%M-%S"
 
 MAX_ETH_RATE=30
 
-class PORTS(IntEnum):
+
+class AutoIntEnum(IntEnum):
+    """IntEnum with auto resolution"""
+    @classmethod
+    def names(cls):
+        return ', '.join(member.name for member in cls)
+
+    @classmethod
+    def _missing_(cls, value):
+        if isinstance(value, str):
+            name = value.strip().upper()
+            if name in cls.__members__: return cls[name]
+            if name.isdigit(): return cls(int(name))
+        return None
+
+
+class PORTS(AutoIntEnum):
     """UUT port constants"""
     TSTAT = 2235
     STREAM = 4210
@@ -47,7 +63,7 @@ class PORTS(IntEnum):
 
 
 
-class SITES(IntEnum):
+class SITES(AutoIntEnum):
     """UUT site constants"""
     s0=     0
     s1=     1
@@ -63,7 +79,7 @@ class SITES(IntEnum):
     dsp=    14
 
 
-class CAPTURE_STATE(IntEnum):
+class CAPTURE_STATE(AutoIntEnum):
     IDLE=           0
     ARM =           1
     RUN=            2
@@ -73,7 +89,7 @@ class CAPTURE_STATE(IntEnum):
     POPROCESS=      4
     CLEANUP=        5
 
-class TRG_LINE(IntEnum):
+class TRG_LINE(AutoIntEnum):
     EXT=    0
     HDMI=   0
     WRTT0=  0
@@ -82,10 +98,15 @@ class TRG_LINE(IntEnum):
     SOFT=   1
     WRTT1=  1
 
-class SENSE(IntEnum):
+class SENSE(AutoIntEnum):
     FALLING=    0
     RISING=     1
 
+
+class GPG_MODE(AutoIntEnum):
+    ONCE=       0
+    LOOP=       2
+    LOOPWAIT=   3
 
 
 #http://eigg:8090/mediawiki/index.php/Products:ACQ400:ACQ400_Data_Format
