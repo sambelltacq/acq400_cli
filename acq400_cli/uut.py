@@ -9,8 +9,8 @@ import time
 import threading
 import numpy as np
 from acq400_cli.utils import Triplet, background_task, chans_to_bitmask, bitmask_to_chans, FanoutProxy, DotDict, RThread, StopWatch, cached_property
-from acq400_cli.constants import PORTS, SITES, CAPTURE_STATE, TRG_LINE, MAX_ETH_RATE
-from acq400_cli.exception import IOCNotReadyError
+from acq400_cli.constants import *
+from acq400_cli.exception import *
 from acq400_cli.sample import TransientSample, StreamSample
 from acq400_cli.data import UUTData, gen_data_filename
 from acq400_cli.site import Site
@@ -254,7 +254,12 @@ class Carrier:
     def has_ao(self):
         """True if ao site else False"""
         return len(self.dist_sites) > 0
-    
+
+    @cached_property
+    def has_gpg(self):
+        """True if gpg available else False """
+        return self.s0.get("GPG__ENABLE", None) is not None
+   
     @property
     def sample_rate(self):
         """sample rate"""
@@ -732,6 +737,67 @@ class Carrier:
     def get_translen_period(self, ajust=1):
         """return ideal translen period in seconds"""
         return self.rtm_translen * ajust / self.sample_rate
+
+    def read_stl(self):
+        """Read STL from UUT"""
+        with socket.socket() as sock:
+            sock.connect((self.addr, PORTS.GPGDUMP))
+            parts = []
+            while True:
+                block = sock.recv(4096)
+                if not block:
+                    break
+                parts.append(block)
+        return b"".join(parts).decode()
+
+    def configure_gpg(self, stl, mode, timescaler=1, trigger=None, clock=None, repeat=0):
+        """Configure GPG for output"""
+        if not self.has_gpg: raise GPGNotAvailableError(f"{self.addr} GPG not available (enable package)")
+
+        self.s0.GPG__ENABLE = 0
+
+        self.s0.GPG__MODE = GPG_MODE(mode).value
+        self.s0.gpg_timescaler = timescaler
+
+        if trigger:
+            logging.debug(f"{self.addr} GPG Trigger = {trigger}")
+            self.s0.GPG_TRG = trigger.enabled
+            self.s0.GPG_TRG__DX = trigger.line
+            self.s0.GPG_TRG__SENSE = trigger.sense
+
+        if clock:
+            logging.debug(f"{self.addr} GPG Clock = {clock}")
+            self.s0.GPG_CLK = clock.enabled
+            self.s0.GPG_CLK__DX = clock.line
+            self.s0.GPG_CLK__SENSE = clock.sense
+
+        self.s0.SIG_EVENT_SRC_0 = 'GPG'
+        self.s0.SIG_FP_GPIO = 'EVT0'
+
+        if isinstance(stl, str):
+            logging.debug(f"{self.addr} reading file {stl}")
+            with open(stl, 'r') as fp:
+                stl = []
+                for line in fp.readlines():
+                    line = line.strip()
+                    if not line or line.startswith('#'): continue
+                    stl.append(line)
+
+        tail = stl[1:]
+        for _ in range(repeat):
+            stl.extend(tail)
+        stl.append("EOF")
+
+        with socket.socket() as sock:
+            with socket.socket() as sock:
+                sock.connect((self.addr, PORTS.GPGSTL))
+                for line in stl:
+                    sock.send(f"{line}\n".encode())
+                    rx = sock.recv(4096).decode().strip()
+                    logging.trace(f"{self.addr} {line} {rx}")
+
+        self.s0.GPG__ENABLE = 1
+
 
 
 
