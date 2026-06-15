@@ -820,6 +820,11 @@ class Collection(list):
         return self._slaves
     
 
+
+def factory(*uutnames):
+    """Init UUTs"""
+    return Collection(uutnames)
+
 if __name__ == '__main__':
 
     uutnames = ['acq2106_130', 'acq2106_054']
