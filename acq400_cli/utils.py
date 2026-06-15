@@ -13,12 +13,13 @@ from acq400_cli.constants import TIMESTAMP_FMT
 
 class Triplet(str):
     """Helper class for Triplets"""
-    keys = ['enabled', 'line', 'sense']
-    def __new__(cls, value):
+    def __new__(cls, value, keys=['enabled', 'line', 'sense']):
         if isinstance(value, list):
             value = ",".join(map(str, value))
         value = value.split(' ')[0].lstrip("=")
-        return str.__new__(cls, value)
+        obj = super().__new__(cls, value)
+        obj.keys = keys
+        return obj
     
     def __getitem__(self, key):
         return int(self.split(',')[key])
