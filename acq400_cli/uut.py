@@ -376,8 +376,9 @@ class Carrier:
     def abort_capture(self):
         if self.capture_state == CAPTURE_STATE['IDLE']: return
         logging.debug(f"Aborting capture {self.hostname}")
+        
+        self.s0.CONTINUOUS = "0"
         self.s0.set_abort = 1
-        self.s0.CONTINUOUS = 0
         self.wait_for_idle(timeout=20)
 
     def arm_transient(self):
