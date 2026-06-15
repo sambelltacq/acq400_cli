@@ -585,6 +585,16 @@ class Carrier:
         line = site if site else self.ai_master.site
         self.s0.spad1_us = f"{enabled},{line},{sense}"
 
+    def get_counter_freq(self, signal="TRG", line=-1):
+        """Get counter frequency"""
+        counter = COUNTERS(line).name
+        return float(getattr(self.s0, f"SIG__{signal}_{counter}__FREQ"))
+
+    def get_counter_count(self, signal="TRG", line=-1):
+        """Get counter count"""
+        counter = COUNTERS(line).name
+        return int(getattr(self.s0, f"SIG__{signal}_{counter}__COUNT"))
+
     def set_trigger_source(self, trigger):
         """Config sync trigger source in"""
         if not self.is_master: return

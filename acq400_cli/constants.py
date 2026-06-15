@@ -113,6 +113,15 @@ class RGM_MODE(AutoIntEnum):
     RGM=    2
     RTM=    3
 
+class COUNTERS(AutoIntEnum):
+    EXT=    -1
+    MB=     0
+    S1=     1
+    S2=     2
+    S3=     3
+    S4=     4
+    S5=     5
+    S6=     6
 
 #http://eigg:8090/mediawiki/index.php/Products:ACQ400:ACQ400_Data_Format
 class EventSignature:
