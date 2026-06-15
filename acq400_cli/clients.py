@@ -142,7 +142,7 @@ class StatusMontior:
         self.online = True
 
         self._status = {
-            'state': 0,
+            'state': None,
             'pre': 0,
             'post': 0,
             'elapsed': 0,
