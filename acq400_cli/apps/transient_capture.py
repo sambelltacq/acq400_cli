@@ -57,9 +57,9 @@ def get_parser():
 
     parser.add_argument('--pre', default=0, type=ArgTypes.int_with_unit, help='Pre samples')
     parser.add_argument('--post', default=100000, type=ArgTypes.int_with_unit, help='Post samples')
-    parser.add_argument('--trigger', default='1,1,1', type=ArgTypes.trigger, help='Capture Trigger')
-    parser.add_argument('--event0', default='0,0,0', type=ArgTypes.triplet, help='Capture Event0')
-    parser.add_argument('--rgm', default='0,0,0', type=ArgTypes.triplet, help='RGM triplet')
+    parser.add_argument('--trigger', default='1,1,1', type=ArgTypes.signal_triplet, help='Capture Trigger')
+    parser.add_argument('--event0', default='0,0,0', type=ArgTypes.signal_triplet, help='Capture Event0')
+    parser.add_argument('--rgm', default='0,0,0', type=ArgTypes.rgm_triplet, help='RGM triplet')
     parser.add_argument('--translen', default=0, type=int, help='Translen value')
 
     parser.add_argument('--siggen', default=None, type=int, help='Siggen hostname to EXT trigger')

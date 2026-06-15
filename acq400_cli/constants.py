@@ -89,7 +89,7 @@ class CAPTURE_STATE(AutoIntEnum):
     POPROCESS=      4
     CLEANUP=        5
 
-class TRG_LINE(AutoIntEnum):
+class SIG_LINE(AutoIntEnum):
     EXT=    0
     HDMI=   0
     WRTT0=  0
@@ -107,6 +107,11 @@ class GPG_MODE(AutoIntEnum):
     ONCE=       0
     LOOP=       2
     LOOPWAIT=   3
+
+class RGM_MODE(AutoIntEnum):
+    OFF=    0
+    RGM=    2
+    RTM=    3
 
 
 #http://eigg:8090/mediawiki/index.php/Products:ACQ400:ACQ400_Data_Format

@@ -589,7 +589,7 @@ class Carrier:
         """Config sync trigger source in"""
         if not self.is_master: return
         source = getattr(trigger, 'source', trigger)
-        line = TRG_LINE.__members__.get(source, None)
+        line = SIG_LINE.__members__.get(source, None)
         if line is None: return
         logging.debug(f"Trigger d{line} source is {source}")
 

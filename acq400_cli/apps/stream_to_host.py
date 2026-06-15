@@ -50,8 +50,8 @@ def main(args):
 def get_parser():
     parser = ArgParser(description='Stream data from UUTs to host')
 
-    parser.add_argument('--trigger', default='1,1,1', type=ArgTypes.trigger, help='Capture Trigger')
-    parser.add_argument('--rgm', default='0,0,0', type=ArgTypes.triplet, help='RGM triplet')
+    parser.add_argument('--trigger', default='1,1,1', type=ArgTypes.signal_triplet, help='Capture Trigger')
+    parser.add_argument('--rgm', default='0,0,0', type=ArgTypes.rgm_triplet, help='RGM triplet')
     parser.add_argument('--translen', default=0, type=ArgTypes.int_with_unit, help='Translen value')
     parser.add_argument('--stream_mask', default=None, type=ArgTypes.list_of_channels, help='Stream mask channels')
 

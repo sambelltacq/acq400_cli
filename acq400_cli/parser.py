@@ -5,7 +5,7 @@ argparsing classes
 
 import argparse
 from acq400_cli.utils import Triplet
-from acq400_cli.constants import TRG_LINE, SENSE
+from acq400_cli.constants import SIG_LINE, SENSE, RGM_MODE
 
 
 class ArgTypes:
@@ -82,17 +82,36 @@ class ArgTypes:
         return (start, end, stride)
 
     @staticmethod
-    def trigger(arg):
+    def signal_triplet(arg):
+        """Signal triplet arg type"""
         parts = arg.upper().split(',')
         try:
+            if len(parts) == 1:
+                trigger = Triplet([1, SIG_LINE[parts[0]].value, 1])
+                trigger.source = parts[0]
             if len(parts) == 2:
-                source, sense = parts
-                trigger = Triplet([1, TRG_LINE[source].value, SENSE[sense].value])
-                trigger.source = source
+                trigger = Triplet([1, SIG_LINE[parts[0]].value, SENSE[parts[1]].value])
+                trigger.source = parts[0]
             if len(parts) == 3:
                 trigger = Triplet(parts)
                 trigger.source = None
             return trigger
+        except Exception as e:
+            print(e)
+        raise ValueError
+
+    @staticmethod
+    def rgm_triplet(arg):
+        """RGM triplet arg type"""
+        parts = arg.upper().split(',')
+        try:
+            if len(parts) == 1:
+                event = Triplet([RGM_MODE[parts[0]].value, 0, 1])
+            if len(parts) == 2:
+                event = Triplet([RGM_MODE[parts[0]].value, 0, SENSE[parts[1]].value])
+            if len(parts) == 3:
+                event = Triplet(parts)
+            return event
         except: pass
         raise ValueError
 
@@ -109,15 +128,3 @@ class ArgParser(argparse.ArgumentParser):
         kwargs.setdefault('add_help', False)
         super().__init__(*args, **kwargs)
         self.add_argument('-h', '--help', action='help', help=argparse.SUPPRESS)
-
-
-
-
-def get_parser():
-    parser = ArgParser(
-        prog='acq400_cli',
-        description='ACQ400 Regression Testing Framework',
-    )
-    subparsers = parser.add_subparsers(dest='command', help='Available commands', required=True)
-    
-
