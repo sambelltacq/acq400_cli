@@ -13,7 +13,7 @@ class AutoIntEnum(IntEnum):
     """IntEnum with auto resolution"""
     @classmethod
     def names(cls):
-        return ', '.join(member.name for member in cls)
+        return ', '.join(cls.__members__)
 
     @classmethod
     def _missing_(cls, value):
