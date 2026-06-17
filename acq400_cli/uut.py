@@ -369,6 +369,15 @@ class Carrier:
 
         return features
 
+    @property
+    def transient_values(self):
+        """Return transient values dict"""
+        return DotDict(part.split("=", 1) for part in self.s0.transient.split())
+
+    @property
+    def auto_soft_enabled(self):
+        """True if auto soft trigger enabled else false"""
+        return bool(int(self.transient_values.SOFT_TRIGGER))
 
 
     # Normal methods
