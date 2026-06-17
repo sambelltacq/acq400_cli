@@ -7,6 +7,7 @@ import logging
 import socket
 import time
 import threading
+import urllib.request
 import numpy as np
 from acq400_cli.utils import Triplet, background_task, chans_to_bitmask, bitmask_to_chans, FanoutProxy, DotDict, RThread, StopWatch, cached_property
 from acq400_cli.constants import *
@@ -378,7 +379,50 @@ class Carrier:
     def auto_soft_enabled(self):
         """True if auto soft trigger enabled else false"""
         return bool(int(self.transient_values.SOFT_TRIGGER))
+    
+    @cached_property
+    def enabled_packages(self):
+        """Return enabled packages"""
+        url = f"http://{self.hostname}/tmp/esw_status"
+        with urllib.request.urlopen(url, timeout=5) as resp:
+            text = resp.read().decode()
+        packages = []
+        for line in text.splitlines():
+            line = line.strip()
+            if not line.startswith('+') or '/packages/' not in line:
+                continue
+            packages.append(line.split('/packages/', 1)[1].strip())
+        return packages
 
+    @property
+    def system_configuration(self):
+        """Return system configuration dict"""
+        software_version = self.s0.software_version
+        fpga_version = self.s0.fpga_version
+        config = {
+            'uutname'        : self.hostname,
+            'fpga'           : fpga_version.split(' ')[0],
+            'fpga_timestamp' : fpga_version.split(' ')[-1],
+            'version'        : int(software_version.split('-')[1]),
+            'firmware'       : software_version,
+            'serial'         : self.s0.SERIAL,
+            'model'          : self.s0.MODEL,
+            'packages'       : self.enabled_packages,
+            'modules'        : [],
+        }
+        for site in self.sites:
+            config['modules'].append(
+                {
+                    'site': site,
+                    'model': self[site].MODEL.split(' ')[0],
+                    'full_model': self[site].PART_NUM,
+                    'serial': self[site].SERIAL,
+                    'chans': self[site].nchan,
+                    'data_size': self[site].data_size,
+                }
+            )
+
+        return config
 
     # Normal methods
 
