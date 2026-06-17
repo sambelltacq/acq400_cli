@@ -605,52 +605,102 @@ class Carrier:
         return int(getattr(self.s0, f"SIG__{signal}_{counter}__COUNT"))
 
     def set_trigger_source(self, trigger):
-        """Config sync trigger source in"""
+        """Config sync trigger source in for master UUT"""
+        
         if not self.is_master: return
+
+        #Handle either Triplet or string arg
         source = getattr(trigger, 'source', trigger)
         line = SIG_LINE.__members__.get(source, None)
-        if line is None: return
+
+        if line is None: raise ValueError(f"Invalid trigger source {source!r} ({SIG_LINE.names()})")
+
         logging.debug(f"Trigger d{line} source is {source}")
 
+        # d0
         if source == 'EXT': self.s0.SIG__SRC__TRG__0 = "EXT"
         if source == 'HDMI': self.s0.SIG__SRC__TRG__0 = "HDMI"
         if source == 'WRTT0': self.s0.SIG__SRC__TRG__0 = "WRTT0"
         if source == 'FREE': self.s0.SIG__SRC__TRG__0 = "NONE"
-        
+
+        # d1
         if source == 'INT': self.s0.SIG__SRC__TRG__1 = "STRIG"
         if source == 'SOFT': self.s0.SIG__SRC__TRG__1 = "STRIG"
         if source == 'WRTT1': self.s0.SIG__SRC__TRG__1 = "WRTT1"
+        if source == 'AUTO': self.s0.SIG__SRC__TRG__1 = "NONE"
+
+        logging.info(f"Trigger d{line} source is {source}")
+
+        # Free running triggers need to be until UUT is armed
+        if source == 'EXT' and self.get_counter_freq() > 0:
+            logging.warning(f"Free Running Trigger Detected - Changing to FREE")
+            self.s0.SIG__SRC__TRG__0 = "NONE" # NONE is a placeholder for EXT
+
+        if source == 'HDMI' and self.get_counter_freq() > 0:
+            logging.warning(f"Free Running Trigger Detected - Changing to FREE")
+            self.s0.SIG__SRC__TRG__0 = "nc" # nc is a placeholder for HDMI
+
+        # Auto soft triggers need to be set to NONE until UUT is armed
+        if source in ('SOFT', 'INT') and self.auto_soft_enabled:
+            logging.warning(f"Auto Soft Trigger - Changing to AUTO")
+            self.s0.SIG__SRC__TRG__1 = "NONE"
 
     def trigger_capture(self, siggen=None):
-        """Trigger capture"""
+        """Trigger capture based on UUT signal config"""
 
         if not self.is_master: return
+
         trigger_line = self.trigger_line
 
+        # d0 Trigger
         if trigger_line == 0:
-            trigger_source = self.s0.SIG__SRC__TRG__0
+            trigger_source = self.s0.SIG__SRC__TRG__1
+
+            if trigger_source in ('NONE', 'nc'): # Handle source placeholders
+                trigger_source = 'EXT' if trigger_source == 'NONE' else 'HDMI'
+                logging.info(f"Enabling external trigger ({trigger_source})")
+                self.s0.SIG__SRC__TRG__1 = trigger_source
+
+            if trigger_source == 'EXT' and siggen:
+                logging.info(f'Triggering {siggen}')
+                siggen.trigger()
+
+            if trigger_source == 'HDMI' and siggen:
+                logging.info(f'Triggering {siggen}')
+                siggen.trigger()
+
             if trigger_source == 'WRTT0':
                 logging.info("Triggering WRTT0")
                 #TODO: how to trigger WR?
+
+        # d1 trigger
+        if trigger_line == 1:
+            trigger_source = self.s0.SIG__SRC__TRG__0
+            
+            if trigger_source == 'NONE':
+                logging.info("Enabling Soft trigger")
+                self.s0.SIG__SRC__TRG__1 = 'STRID'
+                logging.info(f'Soft triggering')
+                self.trigger_soft_trigger()
+            
             if trigger_source == 'STRID':
                 logging.info(f'Soft triggering')
                 self.trigger_soft_trigger()
 
-
-        if trigger_line == 1:
-            trigger_source = self.s0.SIG__SRC__TRG__1
             if trigger_source == 'WRTT1': 
                 logging.info("Triggering WRTT1")
                 #TODO: how to trigger WR?
-            if trigger_source == 'NONE':
-                logging.info("Enabling external trigger")
-                self.s0.SIG__SRC__TRG__1 = 'EXT'
-            if trigger_source == 'EXT' and siggen:
-                logging.info(f'Triggering {siggen}')
-                siggen.trigger()
-            if trigger_source == 'HDMI' and siggen:
-                logging.info(f'Triggering {siggen}')
-                siggen.trigger()
+
+
+
+
+
+
+
+
+
+
+
 
     def configure_capture(
         self,
