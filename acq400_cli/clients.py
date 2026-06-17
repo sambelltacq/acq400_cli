@@ -147,6 +147,8 @@ class StatusMontior:
             'post': 0,
             'elapsed': 0,
             'extra': 0,
+            'shot': 0,
+            'complete': False,
         }
 
         atexit.register(self.close)
@@ -158,6 +160,13 @@ class StatusMontior:
                 return self._status[key]
         return super().__getattr__(key)
 
+    def is_complete(self):
+        with self.lock:
+            if self._status['complete']:
+                self._status['captured'] = False
+                return True
+            return False
+
     def close(self):
         """Close socket"""
         if self.sock:
@@ -168,6 +177,7 @@ class StatusMontior:
         rate = 1
         last = None
         last_update = time.time()
+        prev_state = '0'
 
         self.close()
         sock = socket.socket()
@@ -184,12 +194,19 @@ class StatusMontior:
 
                 state, pre, post, elapsed, extra = line.decode().split(' ')[1:]
                 with self.lock:
+
+                    if prev_state != '0' and state == '0':
+                        self._status['shot'] += 1
+                        self._status['complete'] = True
+                    if state == '0': self._status['complete'] = False
+
                     self._status['state'] = state
                     self._status['pre'] = pre
                     self._status['post'] = post
                     self._status['elapsed'] = elapsed
                     self._status['extra'] = extra
 
+                prev_state = state
                 last = line[:5]
                 last_update = now
         except Exception: pass
