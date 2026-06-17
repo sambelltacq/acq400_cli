@@ -734,7 +734,6 @@ class Carrier:
         rgm='0,0,0',
         translen=0,
         demux=0,
-        auto_soft_trigger=0,
         stream_mask=None,
         sites=None,
         spad=None,
@@ -743,8 +742,8 @@ class Carrier:
         if not self.ai_master: return
         logging.debug(f"{self.hostname} Configuring capture")
 
-        # Auto soft trigger causes problems force off
-        auto_soft_trigger=0
+        auto_soft_trigger = 1 if getattr(trigger, 'source', None) == 'AUTO' else 0
+
         self.s0.TRANSIENT__PRE = pre
         self.s0.TRANSIENT__POST = post
         self.s0.TRANSIENT__SOFT_TRIGGER = auto_soft_trigger
