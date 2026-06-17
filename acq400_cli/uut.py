@@ -404,7 +404,18 @@ class Carrier:
 
     def wait_for_arm(self, timeout=None):
         """Blocks until UUT reaches ARM"""
-        self.wait_for_state(CAPTURE_STATE.ARM, timeout)
+        t0 = time.time()
+
+        while True:
+            if self.capture_state in (CAPTURE_STATE.ARM, CAPTURE_STATE.RUN): break
+            if self.status_monitor.is_complete():
+                logging.warning(f"{self.addr} Shot finished before ready")
+                break
+            t1 = time.time() - t0
+            if timeout and t1 > timeout: 
+                raise TimeoutError(f'{self.addr} failed to reach ARM after {timeout}s stuck in {self.capture_state.name}')
+            time.sleep(1)
+        logging.debug(f"{self.addr} reached ARM")
 
     def wait_for_state(self, target_state, timeout=None):
         """Blocks until UUT reaches state"""
@@ -420,7 +431,7 @@ class Carrier:
 
     def wait_for_nsamples(self, nsamples, timeout=None):
         """Blocks until UUT reaches nsamples"""
-        if not self.ai_master: return
+        if not self.has_ai: return
         logging.debug(f"{self.addr} Wait for {nsamples} samples timeout={timeout}")
         t0 = time.time()
         while self.sample_count < nsamples:
@@ -431,10 +442,21 @@ class Carrier:
 
     def wait_for_transient_complete(self, timeout=None):
         """Wait until transient post processing is complete"""
-        if not self.ai_master: return
+        if not self.has_ai: return
         logging.debug(f"{self.addr} Wait for transient complete timeout={timeout}")
         t0 = time.time()
         while self.s0.TRANS_ACT__CH__DATA_VALID != '1':
+            t1 = time.time() - t0
+            if timeout and t1 > timeout: raise TimeoutError(f'{self.addr} transient failed to complete after {timeout}s')
+            time.sleep(1)
+        logging.debug(f"{self.addr} transient completed")
+
+    def wait_for_complete(self, timeout=None):
+        """Wait until shot is complete"""
+        if not self.has_ai: return
+        logging.debug(f"{self.addr} Wait for shot complete timeout={timeout}")
+        t0 = time.time()
+        while self.ai_master.shot != self.ai_master.completed_shot:
             t1 = time.time() - t0
             if timeout and t1 > timeout: raise TimeoutError(f'{self.addr} transient failed to complete after {timeout}s')
             time.sleep(1)
