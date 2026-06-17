@@ -90,13 +90,14 @@ class CAPTURE_STATE(AutoIntEnum):
     CLEANUP=        5
 
 class SIG_LINE(AutoIntEnum):
-    EXT=    0
-    HDMI=   0
-    WRTT0=  0
-    FREE=   0
-    INT=    1
-    SOFT=   1
-    WRTT1=  1
+    EXT=    0 # External
+    HDMI=   0 # HDMI
+    WRTT0=  0 # White Rabbit
+    FREE=   0 # Free Running
+    INT=    1 # Internal
+    SOFT=   1 # Soft
+    WRTT1=  1 # White Rabbit
+    AUTO=   1 # Auto Soft
 
 class SENSE(AutoIntEnum):
     FALLING=    0
