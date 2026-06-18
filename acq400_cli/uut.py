@@ -671,7 +671,7 @@ class Carrier:
         counter = COUNTERS(line).name
         return int(getattr(self.s0, f"SIG__{signal}_{counter}__COUNT"))
 
-    def set_trigger_source(self, source):
+    def set_trigger_source(self, source, validate=True):
         """Config sync trigger source in for master UUT"""
         
         if not self.is_master: return
@@ -693,6 +693,8 @@ class Carrier:
         if source == 'SOFT': self.s0.SIG__SRC__TRG__1 = "STRIG"
         if source == 'WRTT1': self.s0.SIG__SRC__TRG__1 = "WRTT1"
         if source == 'AUTO': self.s0.SIG__SRC__TRG__1 = "NONE"
+
+        if not validate: return
 
         # Free running triggers need to be until UUT is armed
         if source == 'EXT' and self.get_counter_freq() > 0:
