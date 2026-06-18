@@ -56,6 +56,13 @@ class UUTData(np.ndarray):
 
         return cls(data, sample_format)
 
+    def save_to_file(self, filepath):
+        """Save Data to filepath"""
+        logging.debug(f"Saving data to {filepath}")
+        dirpath = os.path.dirname(filepath)
+        if dirpath: os.makedirs(dirpath, exist_ok=True)
+        self.T.tofile(filepath)
+
 
 
 class StreamDataFile(io.BufferedWriter):
