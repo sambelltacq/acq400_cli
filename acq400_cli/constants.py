@@ -2,6 +2,7 @@
 UUT defined constants
 """
 
+import os
 from enum import IntEnum
 
 TIMESTAMP_FMT = "%y-%m-%d_%H-%M-%S"
@@ -126,6 +127,8 @@ class COUNTERS(AutoIntEnum):
 
 class COLORS:
     RESET = '\033[0m'
+    COLOR_EN = bool(int(os.getenv("HAPI_COLOUR", "1")))
+
     _CODES = {
         'IDLE': '\033[31m',
         'ARM': '\033[38;5;208m',
@@ -143,7 +146,7 @@ class COLORS:
 
     @staticmethod
     def format(color, string):
-        if not color: return string
+        if not color or not COLORS.COLOR_EN: return string
         return f"{color}{string}{COLORS.RESET}"
 
 #http://eigg:8090/mediawiki/index.php/Products:ACQ400:ACQ400_Data_Format
