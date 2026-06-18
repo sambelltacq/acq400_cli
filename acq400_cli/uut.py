@@ -671,13 +671,11 @@ class Carrier:
         counter = COUNTERS(line).name
         return int(getattr(self.s0, f"SIG__{signal}_{counter}__COUNT"))
 
-    def set_trigger_source(self, trigger):
+    def set_trigger_source(self, source):
         """Config sync trigger source in for master UUT"""
         
         if not self.is_master: return
 
-        #Handle either Triplet or string arg
-        source = getattr(trigger, 'source', trigger)
         line = SIG_LINE.__members__.get(source, None)
 
         if line is None: raise ValueError(f"Invalid trigger source {source!r} ({SIG_LINE.names()})")
@@ -695,8 +693,6 @@ class Carrier:
         if source == 'SOFT': self.s0.SIG__SRC__TRG__1 = "STRIG"
         if source == 'WRTT1': self.s0.SIG__SRC__TRG__1 = "WRTT1"
         if source == 'AUTO': self.s0.SIG__SRC__TRG__1 = "NONE"
-
-        logging.info(f"Trigger d{line} source is {source}")
 
         # Free running triggers need to be until UUT is armed
         if source == 'EXT' and self.get_counter_freq() > 0:
@@ -795,7 +791,7 @@ class Carrier:
 
         self.s0.transient = f"PRE={int(pre)} POST={int(post)} SOFT_TRIGGER={auto_soft_trigger} DEMUX={demux}"
         self.ai_master.trg = trigger
-        self.set_trigger_source(trigger)
+        if hasattr(trigger, 'source') and trigger.source: self.set_trigger_source(trigger.source)
         self.ai_master.event0 = event0
         self.ai_master.event1 = event1
         self.ai_master.rgm = rgm
