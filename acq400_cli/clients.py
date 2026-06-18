@@ -76,12 +76,12 @@ class CommandClient(Client):
 class StreamClient():
     """Client to handle streaming from multiple UUTs"""
 
-    def __init__(self, uuts, savedir='DATA', filebytes=None, filesamples=None, overwrite=False, hexdump=False, save=True):
+    def __init__(self, uuts, savedir='DATA', filebytes=None, filesamples=None, timestamp=False, hexdump=False, save=True):
         self.uuts=uuts
         self.savedir=savedir
         self.filebytes=filebytes
         self.filesamples=filesamples
-        self.overwrite=overwrite
+        self.timestamp=timestamp
         self.hexdump=hexdump
         self.save=save
         self.streams = {}
@@ -89,13 +89,18 @@ class StreamClient():
     def start(self, port=PORTS.STREAM, seconds=10, samples=None, bytes=None):
         """stream from each UUT in a thread"""
         logging.debug("Starting stream client")
-        timestamp = None if self.overwrite else generate_timestamp()
+        timestamp = generate_timestamp() if self.timestamp else None
 
         def wrapper(uut):
+            if not uut.stream_enabled:
+                logging.error(f"Streaming not enabled on {uutname}")
+                return
+
             sample_format = uut.stream_sample_format
 
             filebytes = self.filebytes
             if self.filesamples: filebytes = sample_format.bytes * self.filesamples
+            if filebytes: logging.info(f"{uut.addr} File {filebytes} Bytes")
 
             if samples: bytes = sample_format.bytes * samples
             elif seconds: bytes = int(seconds * sample_format.bytes * uut.sample_rate)
@@ -104,7 +109,7 @@ class StreamClient():
             if self.save:
                 datafile = StreamDataFile(
                     self.savedir,
-                    filebytes,
+                    filesize=filebytes,
                     sample_size=sample_format.bytes,
                     hostname=uut.hostname,
                     format=sample_format.tag,
@@ -119,17 +124,18 @@ class StreamClient():
             self.streams[uutname] = RThread(target=wrapper, args=(uut,))
             self.streams[uutname].start()
 
-
     def finshed(self):
         """True if streams finshed else False"""
         return all(not stream.is_alive() for stream in self.streams.values())
 
+    @background_task
     def print_status(self):
         """Print UUT status until finshed"""
         while not self.finshed():
             for status in self.uuts.get_stream_status().values():
                 if status is not None:
                     print(status)
+            time.sleep(1)
 
 class StatusMontior:
     """Monitor status in background"""
