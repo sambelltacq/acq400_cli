@@ -24,6 +24,9 @@ def main(args):
         sites=args.sites,
         spad=args.spad,
     )
+
+    if args.trigger_source: uuts.set_trigger_source(args.trigger_source)
+
     print(f"Capture Configured {uuts.names}")
 
 def get_parser():
@@ -31,13 +34,14 @@ def get_parser():
 
     parser.add_argument('--pre', default=0, type=ArgTypes.int_with_unit, help='Pre samples')
     parser.add_argument('--post', default=0, type=ArgTypes.int_with_unit, help='Post samples')
-    parser.add_argument('--trigger', default='0,0,0', type=ArgTypes.signal_triplet, help='Capture Trigger')
-    parser.add_argument('--event0', default='0,0,0', type=ArgTypes.signal_triplet, help='Capture Event0')
-    parser.add_argument('--event1', default='0,0,0', type=ArgTypes.signal_triplet, help='Capture Event1')
+    parser.add_argument('--trigger', '--trg', default='0,0,0', type=ArgTypes.signal_triplet, help='Capture Trigger')
+    parser.add_argument('--trigger_source', '--trg_src', default=None, choices=ArgTypes.sig_src, type=str.upper, help='Capture Trigger')
+    parser.add_argument('--event0', '--evt0', default='0,0,0', type=ArgTypes.signal_triplet, help='Capture Event0')
+    parser.add_argument('--event1', '--evt1', default='0,0,0', type=ArgTypes.signal_triplet, help='Capture Event1')
     parser.add_argument('--rgm', default='0,0,0', type=ArgTypes.rgm_triplet, help='RGM triplet')
-    parser.add_argument('--translen', default=0, type=int, help='Translen value')
+    parser.add_argument('--translen', '--rtm_translen', default=0, type=int, help='Translen value')
     parser.add_argument('--demux', action='store_true', help='Demux data')
-    parser.add_argument('--stream_mask', default=None, type=ArgTypes.list_of_channels, help='Stream mask channels')
+    parser.add_argument('--stream_mask', '--mask', default=None, type=ArgTypes.list_of_channels, help='Stream mask channels')
     parser.add_argument('--spad', default=None, type=ArgTypes.spad, help='Spad length')
     parser.add_argument('--sites', default=None, help='run0 sites (1,2,3 or ALL)')
 
