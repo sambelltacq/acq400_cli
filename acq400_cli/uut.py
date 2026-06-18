@@ -335,6 +335,11 @@ class Carrier:
         """Return trigger line int"""
         return int(self.ai_master.TRG__DX.removeprefix('d'))
 
+    @property
+    def event0_line(self):
+        """Return event0 line int"""
+        return int(self.ai_master.EVENT0__DX.removeprefix('d'))
+
     @cached_property
     def fpga(self):
         """Return fpga and timestamp"""
@@ -710,15 +715,13 @@ class Carrier:
             logging.warning(f"Auto Soft Trigger - Changing trigger to AUTO")
             self.s0.SIG__SRC__TRG__1 = "NONE"
 
-    def trigger_capture(self, siggen=None):
+    def trigger_capture(self, siggen=None, line=0):
         """Trigger capture based on UUT signal config"""
 
         if not self.is_master: return
 
-        trigger_line = self.trigger_line
-
         # d0 Trigger
-        if trigger_line == 0:
+        if line == 0:
             trigger_source = self.s0.SIG__SRC__TRG__0
 
             if trigger_source in ('NONE', 'nc'): # Handle source placeholders
@@ -739,16 +742,16 @@ class Carrier:
                 #TODO: how to trigger WR?
 
         # d1 trigger
-        if trigger_line == 1:
+        if line == 1:
             trigger_source = self.s0.SIG__SRC__TRG__1
             
             if trigger_source == 'NONE':
                 logging.info("Enabling Soft trigger")
-                self.s0.SIG__SRC__TRG__1 = 'STRID'
+                self.s0.SIG__SRC__TRG__1 = 'STRIG'
                 logging.info(f'Soft triggering')
                 self.trigger_soft_trigger()
             
-            if trigger_source == 'STRID':
+            if trigger_source == 'STRIG':
                 logging.info(f'Soft triggering')
                 self.trigger_soft_trigger()
 
@@ -782,9 +785,13 @@ class Carrier:
         self.s0.TRANSIENT__SOFT_TRIGGER = auto_soft_trigger
 
         self.s0.transient = f"PRE={int(pre)} POST={int(post)} SOFT_TRIGGER={auto_soft_trigger} DEMUX={demux}"
+
         self.ai_master.trg = trigger
         if hasattr(trigger, 'source') and trigger.source: self.set_trigger_source(trigger.source)
+
         self.ai_master.event0 = event0
+        if hasattr(event0, 'source') and event0.source: self.set_trigger_source(event0.source)
+        
         self.ai_master.event1 = event1
         self.ai_master.rgm = rgm
         self.ai_master.RTM_TRANSLEN = translen
