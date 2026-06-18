@@ -75,6 +75,7 @@ class RThread(threading.Thread):
     """Thread with return"""
 
     def __init__(self, *args, **kwargs):
+        kwargs.setdefault('daemon', True)
         super().__init__(*args, **kwargs)
         self.value = None
         self.exception = None

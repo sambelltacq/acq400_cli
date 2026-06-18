@@ -75,19 +75,23 @@ class StreamDataFile(io.BufferedWriter):
         self.savedir = savedir
         self.kwargs = kwargs
         self.total_bytes = 0
-        self.seq = 0
+        self.sequence = 0
         self.filepath = self._filepath()
         super().__init__(io.FileIO(self.filepath, 'wb'))
 
+    @property
+    def name(self):
+        return self.filepath
+
     def _filepath(self):
         os.makedirs(self.savedir, exist_ok=True)
-        seq = self.seq if self.filesize is not None else None
-        filename = gen_data_filename(seq=seq, **self.kwargs)
+        sequence = self.sequence % 1000 if self.filesize is not None else None
+        filename = gen_data_filename(sequence=sequence, **self.kwargs)
         return os.path.join(self.savedir, filename)
 
     def _rotate(self):
         self.total_bytes = 0
-        self.seq = (self.seq + 1) % 1000
+        self.sequence = self.sequence + 1
         self.flush()
         self.raw.close()
         self.filepath = self._filepath()

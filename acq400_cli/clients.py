@@ -7,7 +7,7 @@ import time
 
 from acq400_cli.exception import KnobNotFoundError
 from acq400_cli.constants import PORTS
-from acq400_cli.utils import RThread, generate_timestamp
+from acq400_cli.utils import RThread, background_task, generate_timestamp
 from acq400_cli.data import StreamDataFile
 
 class Client:

@@ -458,7 +458,7 @@ class Carrier:
 
         while True:
             if self.capture_state in (CAPTURE_STATE.ARM, CAPTURE_STATE.RUN): break
-            if int(self.ai_master.SHOT) - self.current_shot == 1: break
+            if int(self.ai_master.SHOT) - int(getattr("self", "current_shot", 0)) == 1: break
             t1 = time.time() - t0
             if timeout and t1 > timeout: 
                 raise TimeoutError(f'{self.addr} failed to reach ARM after {timeout}s stuck in {self.capture_state.name}')
@@ -833,7 +833,15 @@ class Carrier:
             self.s0.stream_subset_mask = 'none'
             return
         sample = StreamSample(self, None)
-        self.s0.stream_subset_mask = chans_to_bitmask([item for chan in mask for item in sample.channels[chan].physical])
+        physical=[]
+        for chan in mask:
+            if chan not in sample.channels:
+                logging.warning(f"{self.addr} subset mask chan {chan} invalid")
+                continue
+            for item in sample.channels[chan].physical:
+                physical.append(item)
+        
+        self.s0.stream_subset_mask = chans_to_bitmask(physical)
 
     def has_hdmi_output(self):
         """Returns True if HDMI out connected else False"""
@@ -852,9 +860,9 @@ class Carrier:
         """Return total bytes for capture runtime"""
         return int(seconds * sample_format.bytes * self.sample_rate)
 
-    def data_filename(self, sample_format, timestamp=None, seq=None):
+    def data_filename(self, sample_format, timestamp=None, sequence=None):
         """Generate data filename"""
-        return gen_data_filename(self.hostname, sample_format, timestamp, seq)
+        return gen_data_filename(self.hostname, sample_format, timestamp, sequence=sequence)
 
     def get_stream_status(self):
         """return the stream status string"""
