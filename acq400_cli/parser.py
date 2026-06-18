@@ -4,9 +4,8 @@ argparsing classes
 
 
 import argparse
-from acq400_cli.utils import Triplet
+from acq400_cli.utils import Triplet, SigGen
 from acq400_cli.constants import SIG_LINE, SENSE, RGM_MODE
-
 
 class ArgTypes:
     @staticmethod
@@ -122,6 +121,12 @@ class ArgTypes:
         enabled = 1 if length > 0 else 0
         return f"{enabled},{length},0"
 
+    @staticmethod
+    def siggen(arg):
+        try: return SigGen(arg)
+        except: pass
+        raise ValueError
+    
 class ArgParser(argparse.ArgumentParser):
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('formatter_class', argparse.ArgumentDefaultsHelpFormatter)
