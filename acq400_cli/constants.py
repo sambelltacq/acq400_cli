@@ -124,6 +124,28 @@ class COUNTERS(AutoIntEnum):
     S5=     5
     S6=     6
 
+class COLORS:
+    RESET = '\033[0m'
+    _CODES = {
+        'IDLE': '\033[31m',
+        'ARM': '\033[38;5;208m',
+        'RUN': '\033[32m',
+        'RUN_PRE': '\033[32m',
+        'RUN_POST': '\033[32m',
+        'POST_PROCESS': '\033[35m',
+        'POPROCESS': '\033[35m',
+        'CLEANUP': '\033[36m',
+    }
+
+    @staticmethod
+    def get(name, default=None):
+        return COLORS._CODES.get(name, default)
+
+    @staticmethod
+    def format(color, string):
+        if not color: return string
+        return f"{color}{string}{COLORS.RESET}"
+
 #http://eigg:8090/mediawiki/index.php/Products:ACQ400:ACQ400_Data_Format
 class EventSignature:
     pass
