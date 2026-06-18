@@ -996,21 +996,18 @@ class Collection(list):
         print("Armed")
         self._proxy.trigger_capture(siggen)
 
-    def print_status_until_idle(self,):
-        """Print UUTs status untill all IDLE"""
-        LINE_UP = '\033[1A'
-        ERASE_LINE = '\033[2K'
-
+    @background_task
+    def print_status(self):
+        """Print UUTs status untill complete"""
+        states = {}
         while True:
-            all_idle = True
+
             for uutname, uut in sorted(self.uuts.items()):
                 state = uut.capture_state.name
-                sample_count = uut.sample_count
-                if state != 'IDLE': all_idle = False
-                print(f"> {uutname} {COLORS.format(COLORS.get(state), state)} {sample_count}")
-            if all_idle: return
+                if state != states.get(uutname, None):
+                    print(f"> {uutname} {COLORS.format(COLORS.get(state), state)}")
+                    states[uutname] = state
             time.sleep(0.5)
-            print(''.join(LINE_UP + ERASE_LINE for _ in range(len(self.uuts))), end='')
 
     # Attribute methods
 
