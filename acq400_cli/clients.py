@@ -169,7 +169,7 @@ class StatusMontior:
     def is_complete(self):
         with self.lock:
             if self._status['complete']:
-                self._status['captured'] = False
+                self._status['complete'] = False
                 return True
             return False
 
@@ -179,44 +179,56 @@ class StatusMontior:
             self.sock.close()
             self.sock = None
 
+    def connect(self):
+        """Connect socket to port"""
+        self.close()
+        logging.debug(f"{self.addr}:{self.port} Starting Status Monitor")
+        try:
+            self.sock = socket.socket()
+            self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+            self.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+            self.sock.connect((self.addr, self.port))
+            self.online = True
+        except Exception as e:
+            self.close()
+            self.online = False
+            logging.error(f"{self.addr} monitor connect failed: {e}")
+            raise
+
     def __monitor(self):
         rate = 1
         last = None
         last_update = time.time()
         prev_state = '0'
 
-        self.close()
-        sock = socket.socket()
-        sock.connect((self.addr, self.port))
-        try:
-            while True:
-                line = sock.recv(200).strip()
+        while True:
+            self.connect()
+            try:
+                while True:
+                    line = self.sock.recv(200).strip()
 
-                if not line: break
-                if not line.startswith(b'STX'): continue
-                
-                now = time.time()
-                if last == line[:5] and now - last_update < rate: continue
+                    if not line: continue
+                    if not line.startswith(b'STX'): continue
+                    
+                    now = time.time()
+                    if last == line[:5] and now - last_update < rate: continue
+                    state, pre, post, elapsed, extra= line.decode().split('\n')[0].split(' ')[1:]
+                    with self.lock:
+                        if prev_state != '0' and state == '0':
+                            self._status['shot'] += 1
+                            self._status['complete'] = True
+                        elif state == '0': self._status['complete'] = False
 
-                state, pre, post, elapsed, extra = line.decode().split(' ')[1:]
-                with self.lock:
+                        self._status['state'] = state
+                        self._status['pre'] = pre
+                        self._status['post'] = post
+                        self._status['elapsed'] = elapsed
+                        self._status['extra'] = extra
 
-                    if prev_state != '0' and state == '0':
-                        self._status['shot'] += 1
-                        self._status['complete'] = True
-                    if state == '0': self._status['complete'] = False
-
-                    self._status['state'] = state
-                    self._status['pre'] = pre
-                    self._status['post'] = post
-                    self._status['elapsed'] = elapsed
-                    self._status['extra'] = extra
-
-                prev_state = state
-                last = line[:5]
-                last_update = now
-        except Exception: pass
-        
-        logging.debug(f"{self.addr} monitor disconnected")
-        self.online = False
-        self.close()
+                    prev_state = state
+                    last = line[:5]
+                    last_update = now
+            except Exception as exc:
+                logging.warning(f"{self.addr} monitor recv error: {exc}")
+                self.online = False
+                time.sleep(1)
