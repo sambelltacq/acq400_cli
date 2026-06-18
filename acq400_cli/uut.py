@@ -720,12 +720,12 @@ class Carrier:
 
         # d0 Trigger
         if trigger_line == 0:
-            trigger_source = self.s0.SIG__SRC__TRG__1
+            trigger_source = self.s0.SIG__SRC__TRG__0
 
             if trigger_source in ('NONE', 'nc'): # Handle source placeholders
                 trigger_source = 'EXT' if trigger_source == 'NONE' else 'HDMI'
                 logging.info(f"Enabling external trigger ({trigger_source})")
-                self.s0.SIG__SRC__TRG__1 = trigger_source
+                self.s0.SIG__SRC__TRG__0 = trigger_source
 
             if trigger_source == 'EXT' and siggen:
                 logging.info(f'Triggering {siggen}')
@@ -741,7 +741,7 @@ class Carrier:
 
         # d1 trigger
         if trigger_line == 1:
-            trigger_source = self.s0.SIG__SRC__TRG__0
+            trigger_source = self.s0.SIG__SRC__TRG__1
             
             if trigger_source == 'NONE':
                 logging.info("Enabling Soft trigger")
