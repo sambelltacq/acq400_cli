@@ -8,6 +8,8 @@ import threading
 import logging
 import socket
 import weakref
+import functools
+from typing import Any, Callable
 
 from acq400_cli.constants import TIMESTAMP_FMT
 
@@ -229,9 +231,10 @@ def bitmask_to_chans(mask):
     mask = int(mask, 16)
     return [i + 1 for i in range(mask.bit_length()) if mask & (1 << i)]
 
-def background_task(func):
+def background_task(func: Callable[..., Any]) -> Callable[..., RThread]:
     """Runs passed func in the background returns thread"""
-    def wrapper(*args, **kwargs):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs) -> RThread:
         thread = RThread(target=func, args=args, kwargs=kwargs)
         thread.daemon = True
         thread.start()
