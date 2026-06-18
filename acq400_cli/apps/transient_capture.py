@@ -12,7 +12,7 @@ def main(args):
 
     uuts.abort_capture()
 
-    print('Configuring capture')
+    print(f"Configuring capture {uuts.names}")
     uuts.configure_capture(
         pre=args.pre,
         post=args.post,
@@ -22,21 +22,29 @@ def main(args):
         translen=args.translen,
     )
 
+    uuts.print_status()
+
     uuts.arm_transient()
     print('Arming')
 
     uuts.wait_for_arm()
     print('Armed')
 
-    uuts.trigger_capture(args.siggen)
+    uuts.trigger_capture(args.siggen, args.trigger.line)
 
-    uuts.print_status_until_idle()
+    if args.pre > 0:
+        print(f"Wait for {args.pre} samples")
+        uuts.wait_for_nsamples(args.pre)
+        uuts.trigger_capture(args.siggen, args.event0.line)
+
+    uuts.wait_for_idle()
     print("Complete")
 
     print('Reading data')
     data = uuts.read_transient_data()
 
-    timestamp = None if args.overwrite else generate_timestamp()
+    timestamp = generate_timestamp() if args.timestamp else None
+
     for uutname, dat in data.items():
         filename = uuts[uutname].data_filename(dat.sample_format.tag, timestamp)
         filepath = os.path.join(args.savedir, filename)
@@ -62,7 +70,7 @@ def get_parser():
     parser.add_argument('--savedir', default="DATA", help='Save dir')
 
     parser.add_argument('--hexdump', action='store_true', help='Print hexdump command')
-    parser.add_argument('--overwrite', action='store_true', help='Overwrite data file')
+    parser.add_argument('--timestamp', action='store_true', help='Timestamp data file')
     
     parser.add_argument('uutnames', nargs='+', help="uut hostnames")
     return parser
