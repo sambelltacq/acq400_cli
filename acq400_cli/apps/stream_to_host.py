@@ -7,12 +7,10 @@ Usage:
     acq400_cli stream_to_host --stream_mask=1-4,33 --filesamples=1000000 --overwrite --hexdump acq2106_054
 """
 
-from acq400_cli import ArgTypes, Collection, SigGen, StreamClient, ArgParser
+from acq400_cli import ArgTypes, Collection, StreamClient, ArgParser
 
 def main(args):
     uuts = Collection(args.uutnames)
-
-    siggen = SigGen(args.siggen) if args.siggen else None
 
     uuts.abort_capture()
 
@@ -24,13 +22,13 @@ def main(args):
         stream_mask=args.stream_mask
     )
 
-    print(f"Setup Host {uuts.names}")
+    print(f"Init Stream {uuts.names}")
     stream = StreamClient(
         uuts,
         savedir=args.savedir,
         filebytes=args.filebytes,
         filesamples=args.filesamples,
-        overwrite=args.overwrite,
+        timestamp=args.timestamp,
         hexdump=args.hexdump,
         save=True,
     )
@@ -42,9 +40,14 @@ def main(args):
         bytes=args.bytes
     )
 
-    uuts.trigger_when_armed(siggen=siggen)
+    uuts.wait_for_arm()
+    print('Armed')
 
     stream.print_status()
+
+    uuts.trigger_capture(siggen=args.siggen, line=args.trigger.line)
+
+    uuts.wait_for_idle()
 
 
 def get_parser():
@@ -57,15 +60,15 @@ def get_parser():
 
     parser.add_argument('--seconds', default=10, type=int, help='Total seconds to stream')
     parser.add_argument('--bytes', default=None, type=ArgTypes.int_with_unit, help='Total bytes to stream')
-    parser.add_argument('--samples', default=None, type=int, help='Total samples to stream')
+    parser.add_argument('--samples', default=None, type=ArgTypes.int_with_unit, help='Total samples to stream')
 
     parser.add_argument('--filebytes', default=None, type=ArgTypes.int_with_unit, help='Max filesize in bytes')
-    parser.add_argument('--filesamples', default=None, type=int, help='Max filesize in samples')
+    parser.add_argument('--filesamples', default=None, type=ArgTypes.int_with_unit, help='Max filesize in samples')
 
     parser.add_argument('--savedir', default="DATA", help='Save dir')
-    parser.add_argument('--overwrite', action='store_true', help='Overwrite datafiles')
+    parser.add_argument('--timestamp', action='store_true', help='Timestamp datafiles')
 
-    parser.add_argument('--siggen', default=None, type=int, help='Siggen hostname to EXT trigger')
+    parser.add_argument('--siggen', default=None, type=ArgTypes.siggen, help='Siggen hostname to EXT trigger')
     parser.add_argument('--hexdump', action='store_true', help='Print hexdump command')
     
     parser.add_argument('uutnames', nargs='+', help="uut hostnames")
