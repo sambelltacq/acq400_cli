@@ -550,7 +550,8 @@ class Carrier:
         self.current_shot = int(self.ai_master.SHOT)
 
         if not self.stream_enabled: 
-            logging.warning(f"{self.hostname} Streaming not enabled")
+            logging.error(f"{self.hostname} Streaming not enabled")
+            return
         
         if not self.rgm_enabled and self.data_rate_masked > MAX_ETH_RATE: 
             logging.warning(f"{self.hostname} Stream datarate above {MAX_ETH_RATE} MB/s")
@@ -702,16 +703,16 @@ class Carrier:
 
         if not validate: return
 
-        # Free running triggers need to be until UUT is armed
+        # Free running triggers need to be disabled until UUT is armed
         if source == 'EXT' and self.get_counter_freq() > 0:
-            logging.warning(f"Free Running Trigger Detected - Changing trigger to FREE")
+            logging.warning(f"Free Running Trigger Detected - Changing {source} -> FREE")
             self.s0.SIG__SRC__TRG__0 = "NONE" # NONE is a placeholder for EXT
 
         if source == 'HDMI' and self.get_counter_freq() > 0:
-            logging.warning(f"Free Running Trigger Detected - Changing trigger to FREE")
+            logging.warning(f"Free Running Trigger Detected - Changing {source} -> FREE")
             self.s0.SIG__SRC__TRG__0 = "nc" # nc is a placeholder for HDMI
 
-        # Auto soft triggers need to be set to NONE until UUT is armed
+        # Auto soft triggers need to be disabled until UUT is armed
         if source in ('SOFT', 'INT') and self.auto_soft_enabled:
             logging.warning(f"Auto Soft Trigger - Changing trigger to AUTO")
             self.s0.SIG__SRC__TRG__1 = "NONE"
@@ -858,11 +859,12 @@ class Carrier:
     def get_stream_status(self):
         """return the stream status string"""
         if not self.status: return None
+        state = self.capture_state.name
         current = self.status.total_bytes // self.status.ssb
         target = self.status.target_bytes // self.status.ssb
         runtime = int(time.time() - self.status.time_start) if self.status.time_start > 0 else 0
-        missed = '' if self.status.spad0_chan is None else f"({self.status.missed:,})"
-        return f"{self.hostname} [{self.cstate.name}] {runtime}s {current:,} / {target:,} {missed}"
+        missed = '' if self.status.spad0_chan is None else f"({self.status.missed:,} Missed)"
+        return f"{self.hostname} [{COLORS.format(COLORS.get(state), state)}] {runtime}s {current:,} / {target:,} Samples {missed}"
 
     def set_mgt_agg(self, enable=True, decimate=None):
         """Set MGT aggregator"""
