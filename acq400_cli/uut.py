@@ -899,7 +899,7 @@ class Carrier:
                 parts.append(block)
         return b"".join(parts).decode()
 
-    def configure_gpg(self, stl, mode, timescaler=1, trigger=None, clock=None, repeat=0):
+    def configure_gpg(self, stl, mode, timescaler=1, trigger=None, clock=None):
         """Configure GPG for output"""
         if not self.has_gpg: raise GPGNotAvailableError(f"{self.addr} GPG not available (enable package)")
 
@@ -931,19 +931,14 @@ class Carrier:
                     line = line.strip()
                     if not line or line.startswith('#'): continue
                     stl.append(line)
-
-        tail = stl[1:]
-        for _ in range(repeat):
-            stl.extend(tail)
         stl.append("EOF")
 
         with socket.socket() as sock:
-            with socket.socket() as sock:
-                sock.connect((self.addr, PORTS.GPGSTL))
-                for line in stl:
-                    sock.send(f"{line}\n".encode())
-                    rx = sock.recv(4096).decode().strip()
-                    logging.trace(f"{self.addr} {line} {rx}")
+            sock.connect((self.addr, PORTS.GPGSTL))
+            for line in stl:
+                sock.send(f"{line}\n".encode())
+                rx = sock.recv(4096).decode().strip()
+                logging.trace(f"{self.addr} {line} {rx}")
 
         self.s0.GPG__ENABLE = 1
 

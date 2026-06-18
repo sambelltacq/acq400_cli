@@ -5,3 +5,6 @@ class KnobNotFoundError(Exception):
 
 class IOCNotReadyError(Exception):
     """Raised when a UUT IOC isn't ready"""
+
+class GPGNotAvailableError(Exception):
+    """Raised when GPG is not enabled"""
