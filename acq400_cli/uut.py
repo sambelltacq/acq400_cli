@@ -181,6 +181,7 @@ class Carrier:
         """Get the overall capture state"""
         state = self.status_monitor.state
         if state is not None: return CAPTURE_STATE(int(state))
+        #Fallback in case of dead monitor
         tstate = self.tstate
         cstate = self.cstate
         if tstate == cstate: return cstate
@@ -190,8 +191,7 @@ class Carrier:
     @property
     def sample_count(self):
         """Return current sample count"""
-        with self.status_monitor.lock:
-            return int(self.status_monitor.elapsed) & 0xFFFFFFFF
+        return int(self.status_monitor.elapsed) & 0xFFFFFFFF
 
     @property
     def ioc_ready(self):
