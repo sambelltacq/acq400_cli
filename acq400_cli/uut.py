@@ -698,16 +698,16 @@ class Carrier:
 
         # Free running triggers need to be until UUT is armed
         if source == 'EXT' and self.get_counter_freq() > 0:
-            logging.warning(f"Free Running Trigger Detected - Changing to FREE")
+            logging.warning(f"Free Running Trigger Detected - Changing trigger to FREE")
             self.s0.SIG__SRC__TRG__0 = "NONE" # NONE is a placeholder for EXT
 
         if source == 'HDMI' and self.get_counter_freq() > 0:
-            logging.warning(f"Free Running Trigger Detected - Changing to FREE")
+            logging.warning(f"Free Running Trigger Detected - Changing trigger to FREE")
             self.s0.SIG__SRC__TRG__0 = "nc" # nc is a placeholder for HDMI
 
         # Auto soft triggers need to be set to NONE until UUT is armed
         if source in ('SOFT', 'INT') and self.auto_soft_enabled:
-            logging.warning(f"Auto Soft Trigger - Changing to AUTO")
+            logging.warning(f"Auto Soft Trigger - Changing trigger to AUTO")
             self.s0.SIG__SRC__TRG__1 = "NONE"
 
     def trigger_capture(self, siggen=None):
@@ -755,16 +755,6 @@ class Carrier:
             if trigger_source == 'WRTT1': 
                 logging.info("Triggering WRTT1")
                 #TODO: how to trigger WR?
-
-
-
-
-
-
-
-
-
-
 
 
     def configure_capture(
@@ -1009,7 +999,7 @@ class Collection(list):
                 state = uut.capture_state.name
                 sample_count = uut.sample_count
                 if state != 'IDLE': all_idle = False
-                print(f"{uutname} {COLORS.format(COLORS.get(state), state)} {sample_count}")
+                print(f"> {uutname} {COLORS.format(COLORS.get(state), state)} {sample_count}")
             if all_idle: return
             time.sleep(0.5)
             print(''.join(LINE_UP + ERASE_LINE for _ in range(len(self.uuts))), end='')
