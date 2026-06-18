@@ -444,6 +444,7 @@ class Carrier:
         if self.capture_state == CAPTURE_STATE['ARM']:
             logging.warning("Not Arming - System aleady ARMED")
             return
+        self.current_shot = int(self.ai_master.SHOT)
         logging.debug(f"Arming capture {self.hostname}")
         self.s0.set_arm = 1
         
@@ -457,9 +458,7 @@ class Carrier:
 
         while True:
             if self.capture_state in (CAPTURE_STATE.ARM, CAPTURE_STATE.RUN): break
-            if self.status_monitor.is_complete():
-                logging.warning(f"{self.addr} Shot finished before ready")
-                break
+            if int(self.ai_master.SHOT) - self.current_shot == 1: break
             t1 = time.time() - t0
             if timeout and t1 > timeout: 
                 raise TimeoutError(f'{self.addr} failed to reach ARM after {timeout}s stuck in {self.capture_state.name}')
@@ -547,6 +546,8 @@ class Carrier:
 
     def stream_to_host(self, target_bytes, port=PORTS.STREAM, sample_format=None, datafile=None, bufferlen=4*(1024*1014)):
         """Stream data to host"""
+
+        self.current_shot = int(self.ai_master.SHOT)
 
         if not self.stream_enabled: 
             logging.warning(f"{self.hostname} Streaming not enabled")
