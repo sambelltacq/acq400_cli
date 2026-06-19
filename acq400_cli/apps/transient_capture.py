@@ -46,11 +46,14 @@ def main(args):
     timestamp = generate_timestamp() if args.timestamp else None
 
     for uutname, dat in data.items():
-        filename = uuts[uutname].data_filename(dat.sample_format.tag, timestamp)
-        filepath = os.path.join(args.savedir, filename)
+        savepath = uuts[uutname].savepath(
+            sample_format=dat.sample_format.tag,
+            timestamp=timestamp,
+            savedir=args.savedir,
+        )
 
-        print(f"Saving {uutname} data to {filepath}")
-        dat.save_to_file(filepath)
+        print(f"Saving {uutname} data to {savepath}")
+        dat.save_to_file(savepath)
         
         if args.hexdump: print(f"Hexdump: {dat.sample_format.hexdump} {filepath}")
 

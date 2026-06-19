@@ -9,6 +9,8 @@ import time
 import threading
 import urllib.request
 import numpy as np
+from pathlib import Path
+
 from acq400_cli.utils import Triplet, background_task, chans_to_bitmask, bitmask_to_chans, FanoutProxy, DotDict, RThread, StopWatch, cached_property
 from acq400_cli.constants import *
 from acq400_cli.exception import *
@@ -861,9 +863,11 @@ class Carrier:
         """Return total bytes for capture runtime"""
         return int(seconds * sample_format.bytes * self.sample_rate)
 
-    def data_filename(self, sample_format, timestamp=None, sequence=None):
+    def savepath(self, sample_format, timestamp=None, sequence=None, extension='dat', savedir=None):
         """Generate data filename"""
-        return gen_data_filename(self.hostname, sample_format, timestamp, sequence=sequence)
+        filepath = gen_data_filename(self.hostname, sample_format, timestamp, sequence=sequence, extension=extension)
+        if savedir: filepath = os.path.join(savedir, filepath)
+        return Path(filepath)
 
     def get_stream_status(self):
         """return the stream status string"""

@@ -6,6 +6,7 @@ import os
 import io
 import math
 import logging
+from pathlib import Path
 
 import numpy as np
 
@@ -87,7 +88,7 @@ class StreamDataFile(io.BufferedWriter):
         os.makedirs(self.savedir, exist_ok=True)
         sequence = self.sequence % 1000 if self.filesize is not None else None
         filename = gen_data_filename(sequence=sequence, **self.kwargs)
-        return os.path.join(self.savedir, filename)
+        return Path(os.path.join(self.savedir, filename))
 
     def _rotate(self):
         self.total_bytes = 0
@@ -117,13 +118,14 @@ class StreamDataFile(io.BufferedWriter):
             offset += n
         return nbytes
 
-def gen_data_filename(hostname, format, timestamp=None, sequence=None, **kwargs):
+def gen_data_filename(hostname, format, timestamp=None, sequence=None, extension='dat', **kwargs):
     """Generate dat filename"""
     parts = [hostname]
     if timestamp: parts.append(timestamp)
     parts.append(format)
     if sequence is not None: parts.append(f"{sequence:03}")
-    return '.'.join(parts) + '.dat'
+    parts.append(extension)
+    return '.'.join(parts)
 
 def parse_filename_parts(filepath):
     parts = DotDict({
