@@ -56,11 +56,12 @@ acq400_cli stream_to_host --trigger=EXT,RISING --bytes=100MB <uutnames>
 acq400_cli stream_to_host --trigger=EXT,RISING --samples=10M --filesamples=1M <uutnames>
 ```
 
-- **Filessize Limit** - stream 1M samples on an external trigger, 100MB samples per file:
-```bash
-acq400_cli stream_to_host --trigger=EXT,RISING --samples=1M --filesize=100k <uutnames>
-```
+- **Filessize Limit** - stream 1M samples on an external trigger, 10MB Bytes per file:
 
+```bash
+acq400_cli stream_to_host --trigger=EXT,RISING --samples=1M --filebytes=10MB <uutnames>
+```
+Note: `--filebytes` will round up to the nearest whole sample.
 
 ### Configure Sites
 
@@ -114,6 +115,34 @@ acq400_cli configure_capture --stream_mask=1-4 --trigger=EXT,RISING <uutnames>
 ```bash
 acq400_cli configure_capture --rgm=RTM,RISING --translen=5000 --trigger=SOFT,RISING <uutnames>
 ```
+
+### Plot Datafile
+
+Plot a datafile from disk
+
+- **By carrier** - Plot channel 1 each UUT gets its own figure
+```bash
+acq400_cli <datafile>
+```
+
+- **Channels** - Plot channel 1,2,3 each UUT gets its own figure
+```bash
+acq400_cli --chans=1,2,3 <datafile>
+```
+
+- **Plot start** - Plot channel 1,2,3 from 50K samples
+```bash
+acq400_cli --chans=1,2,3 --pses=50K:: <datafile>
+```
+
+- **Plot stride** - Plot channel 1,2,3 every 100th sample
+```bash
+acq400_cli --chans=1,2,3 --pses=::100 <datafile>
+```
+
+### Generate Hexdump
+
+
 
 
 ## Definitions
