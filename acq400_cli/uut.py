@@ -840,8 +840,9 @@ class Carrier:
                 continue
             for item in sample.channels[chan].physical:
                 physical.append(item)
-        
-        self.s0.stream_subset_mask = chans_to_bitmask(physical)
+        bitmask = chans_to_bitmask(physical)
+        logging.debug(f"{self.addr} stream_subset_mask set to {bitmask}")
+        self.s0.stream_subset_mask = bitmask
 
     def has_hdmi_output(self):
         """Returns True if HDMI out connected else False"""
