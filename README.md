@@ -140,6 +140,11 @@ acq400_cli plot_datafile --chans=1,2,3 --pses=50K:: <datafiles>
 acq400_cli plot_datafile --chans=1,2,3 --pses=::100 <datafiles>
 ```
 
+- **Plot seconds** - Plot channel 1,2,3 with timebase
+```bash
+acq400_cli plot_datafile --chans=1,2,3 --rate=1M --secs <datafiles>
+```
+
 ### Generate Hexdump
 
 Generate hexdump command
