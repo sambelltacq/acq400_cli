@@ -1,4 +1,7 @@
 *.pyc
-acq400_cli.log
+*.log*
 *.egg-info
 *.dat
+DATA/
+RESULTS/
+DEMUXED_DATA/
