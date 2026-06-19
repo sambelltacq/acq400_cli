@@ -13,7 +13,7 @@ class ArgTypes:
 
     @staticmethod
     def list_of_ints_comma(arg):
-        return list(map(int, arg.split(',')))
+        return list(map(int, str(arg).split(',')))
 
     @staticmethod
     def list_of_strings_comma(arg):
@@ -25,6 +25,8 @@ class ArgTypes:
 
     @staticmethod
     def list_of_channels(arg):
+        if isinstance(arg, (list, tuple)): return list(arg)
+        if not isinstance(arg, str): arg = str(arg)
         if arg.upper() == 'ALL': return []
         channels = []
         for chan in arg.split(','):
@@ -129,7 +131,15 @@ class ArgTypes:
         try: return SigGen(arg)
         except: pass
         raise ValueError
-    
+
+    @staticmethod
+    def bool_string(arg, default=False):
+        if isinstance(arg, bool): return arg
+        arg = str(arg).strip().lower()
+        if arg in ("1", "true", 'y'): return True
+        if arg in ("0", "false", 'n'): return False
+        return default
+
 class ArgParser(argparse.ArgumentParser):
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('formatter_class', argparse.ArgumentDefaultsHelpFormatter)
