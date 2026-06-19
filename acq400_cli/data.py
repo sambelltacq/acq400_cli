@@ -193,9 +193,12 @@ def demux_datafile(data_file, rootdir="DEMUXED_DATA", chunk_samples=1000000, max
         shape=(file_samples,),
     )
 
+    type_ext = {'ADC': 'adc', 'DIO': 'dio', 'SPD': 'spd'}
+
     handles = {}
     for logical_chan, channel in sample_format.channels.items():
-        filename = f"CH{logical_chan:03d}.{channel['chan_size']}B.dat"
+        ext = type_ext[channel['chan_type']]
+        filename = f"CH{logical_chan:03d}.{channel['chan_size']}B.{ext}"
         save_path = os.path.join(save_dir, filename)
         handles[logical_chan] = open(save_path, 'wb')
 
