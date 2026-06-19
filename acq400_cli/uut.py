@@ -298,8 +298,12 @@ class Carrier:
         calibration = {}
         chan = 1
         for thread in threads:
-            for eslo, eoff in thread.join():
-                calibration[chan] = (eslo, eoff)
+            for eslo, eoff, max_scale in thread.join():
+                calibration[chan] = {
+                    'eslo': eslo,
+                    'eoff': eoff,
+                    'max_scale': max_scale,
+                }
                 chan += 1
         return calibration
 
@@ -953,7 +957,6 @@ class Carrier:
         metadata = {}
         metadata['sample_rate'] = self.sample_rate
         metadata['calibration'] = self.calibration
-        metadata['max_scale'] = self.vmax
         metadata['modules'] = {}
         for num, site in self.ai_sites.items():
             metadata['modules'][int(num)] = site.PART_NUM

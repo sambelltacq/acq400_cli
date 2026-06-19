@@ -189,9 +189,10 @@ class Site:
     @cached_property
     def calibration(self):
         """Return site calibration"""
-        eslo = map(float, self.AI__CAL__ESLO.split(" ")[2:])
-        eoff = map(float, self.AI__CAL__EOFF.split(" ")[2:])
-        return list(zip(eslo, eoff))
+        max_scale = self.vmax
+        eslo_arr = list(map(float, self.AI__CAL__ESLO.split(" ")[2:]))
+        eoff_arr = list(map(float, self.AI__CAL__EOFF.split(" ")[2:]))
+        return [(eslo, eoff, max_scale) for eslo, eoff in zip(eslo_arr, eoff_arr)]
 
     @property
     def role(self):
