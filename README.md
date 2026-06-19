@@ -122,22 +122,22 @@ Plot a datafile from disk
 
 - **By carrier** - Plot channel 1 each UUT gets its own figure
 ```bash
-acq400_cli <datafile>
+acq400_cli plot_datafile <datafile>
 ```
 
 - **Channels** - Plot channel 1,2,3 each UUT gets its own figure
 ```bash
-acq400_cli --chans=1,2,3 <datafile>
+acq400_cli plot_datafile --chans=1,2,3 <datafile>
 ```
 
 - **Plot start** - Plot channel 1,2,3 from 50K samples
 ```bash
-acq400_cli --chans=1,2,3 --pses=50K:: <datafile>
+acq400_cli plot_datafile --chans=1,2,3 --pses=50K:: <datafile>
 ```
 
 - **Plot stride** - Plot channel 1,2,3 every 100th sample
 ```bash
-acq400_cli --chans=1,2,3 --pses=::100 <datafile>
+acq400_cli plot_datafile --chans=1,2,3 --pses=::100 <datafile>
 ```
 
 ### Generate Hexdump
