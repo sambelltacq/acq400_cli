@@ -49,6 +49,8 @@ def main(args):
 
     uuts.wait_for_idle()
 
+    [thread.join() for thread in stream.streams.values()]
+
 
 def get_parser():
     parser = ArgParser(description='Stream data from UUTs to host')
