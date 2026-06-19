@@ -122,27 +122,45 @@ Plot a datafile from disk
 
 - **By carrier** - Plot channel 1 each UUT gets its own figure
 ```bash
-acq400_cli plot_datafile <datafile>
+acq400_cli plot_datafile <datafiles>
 ```
 
 - **Channels** - Plot channel 1,2,3 each UUT gets its own figure
 ```bash
-acq400_cli plot_datafile --chans=1,2,3 <datafile>
+acq400_cli plot_datafile --chans=1,2,3 <datafiles>
 ```
 
 - **Plot start** - Plot channel 1,2,3 from 50K samples
 ```bash
-acq400_cli plot_datafile --chans=1,2,3 --pses=50K:: <datafile>
+acq400_cli plot_datafile --chans=1,2,3 --pses=50K:: <datafiles>
 ```
 
 - **Plot stride** - Plot channel 1,2,3 every 100th sample
 ```bash
-acq400_cli plot_datafile --chans=1,2,3 --pses=::100 <datafile>
+acq400_cli plot_datafile --chans=1,2,3 --pses=::100 <datafiles>
 ```
 
 ### Generate Hexdump
 
+Generate hexdump command
 
+- **Stream** - Generate command for stream data
+```bash
+acq400_cli generate_hexdump --stream <uutnames>
+```
+- **Transient** - Generate command for transient data
+```bash
+acq400_cli generate_hexdump --transient <uutnames>
+```
+
+### Demux Datafile
+
+Demux datafiles into individual channels
+
+- **Demux** - Demux muxed datafiles into individual channels
+```bash
+acq400_cli demux_data <datafiles>
+```
 
 
 ## Definitions
