@@ -115,6 +115,7 @@ class StreamClient():
                     format=sample_format.tag,
                     timestamp=timestamp
                 )
+                uut.save_metadata(datafile.name.with_suffix('.meta'))
 
             savepath = uut.stream_to_host(bytes, port, sample_format, datafile)
 

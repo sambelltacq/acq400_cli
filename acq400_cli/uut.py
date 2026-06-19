@@ -7,6 +7,7 @@ import logging
 import socket
 import time
 import threading
+import json
 import urllib.request
 import numpy as np
 from pathlib import Path
@@ -946,6 +947,20 @@ class Carrier:
                 logging.trace(f"{self.addr} {line} {rx}")
 
         self.s0.GPG__ENABLE = 1
+
+    def save_metadata(self, filepath):
+        """save capture metadata to filepath"""
+        metadata = {}
+        metadata['sample_rate'] = self.sample_rate
+        metadata['calibration'] = self.calibration
+        metadata['max_scale'] = self.vmax
+        metadata['modules'] = {}
+        for num, site in self.ai_sites.items():
+            metadata['modules'][int(num)] = site.PART_NUM
+
+        logging.debug(f"Saving metadata to {filepath}")
+        with open(filepath, "w", encoding="utf-8") as fp:
+            json.dump(metadata, fp, indent=4, ensure_ascii=False)
 
 
 
