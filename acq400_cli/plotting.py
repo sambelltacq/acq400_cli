@@ -32,7 +32,8 @@ def plot_by_carrier(dataset, chans=(1), pses=(0, None, 1)):
             plot_end = length if end is None or end < 0 else end
             plot_start = max(0, min(start, length))
             plot_end = max(plot_start, min(plot_end, length))
-            ax.plot(chandat[plot_start:plot_end:stride], label=f'CH{chan}')
+            x = range(plot_start, plot_end, stride)
+            ax.plot(x, chandat[plot_start:plot_end:stride], label=f'CH{chan}')
         ax.set_title(uutname)
         ax.set_ylabel('codes')
         ax.legend()
