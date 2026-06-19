@@ -5,10 +5,11 @@ argparsing classes
 
 import argparse
 from acq400_cli.utils import Triplet, SigGen
-from acq400_cli.constants import SIG_LINE, SENSE, RGM_MODE
+from acq400_cli.constants import SIG_LINE, SENSE, RGM_MODE, GPG_MODE
 
 class ArgTypes:
     sig_src = list(SIG_LINE.__members__)
+    gpg_mode = list(GPG_MODE.__members__)
 
     @staticmethod
     def list_of_ints_comma(arg):
