@@ -18,7 +18,13 @@ def main(args):
         data = UUTData.from_file(filename, max_samples=args.max_samples)
         print(data)
         uutname = parts.hostname or os.path.basename(filename)
-        plot_by_carrier({uutname: data}, chans=args.chans, pses=args.pses)
+        plot_by_carrier(
+            {uutname: data},
+            chans=args.chans,
+            pses=args.pses,
+            secs=args.secs,
+            rate=args.rate,
+        )
 
 
 

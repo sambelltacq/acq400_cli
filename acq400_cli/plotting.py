@@ -17,7 +17,7 @@ max 8 subplots per figure?
 spad no smoothing
 """
 
-def plot_by_carrier(dataset, chans=(1), pses=(0, None, 1)):
+def plot_by_carrier(dataset, chans=(1), pses=(0, None, 1), secs=False, rate=1000000):
     """Plot data by carrier"""
     start, end, stride = pses
     rows = len(dataset)
@@ -33,12 +33,13 @@ def plot_by_carrier(dataset, chans=(1), pses=(0, None, 1)):
             plot_start = max(0, min(start, length))
             plot_end = max(plot_start, min(plot_end, length))
             x = range(plot_start, plot_end, stride)
+            if secs: x = [i / rate for i in x]
             ax.plot(x, chandat[plot_start:plot_end:stride], label=f'CH{chan}')
         ax.set_title(uutname)
         ax.set_ylabel('codes')
         ax.legend()
 
-    axs[-1, 0].set_xlabel('samples')
+    axs[-1, 0].set_xlabel('seconds' if secs else 'samples')
     plt.show()
     return fig
 
