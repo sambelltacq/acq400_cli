@@ -4,6 +4,7 @@ Data handling
 
 import os
 import io
+import json
 import math
 import logging
 from pathlib import Path
@@ -19,10 +20,13 @@ class Dataset:pass
 class UUTData(np.ndarray):
     """Wrapper class for UUT data"""
 
-    def __new__(cls, input_array, sample_format):
+    def __new__(cls, input_array, sample_format, calibration=None):
 
         obj = np.asanyarray(input_array).view(cls)
+
         obj.sample_format = sample_format
+        obj.calibration = calibration
+
         obj.channels = {chan: obj[str(chan)].view(np.ndarray) for chan in sample_format.channels}
         obj.adc = {chan: obj[str(chan)].view(np.ndarray) for chan in sample_format.types.get('ADC', [])}
         obj.dio = {chan: obj[str(chan)].view(np.ndarray) for chan in sample_format.types.get('DIO', [])}
@@ -36,26 +40,40 @@ class UUTData(np.ndarray):
         return f"<UUT Data {len(self)} Samples x {self.sample_format.tag} ({self.sample_format.bytes} Bytes)>"
 
     @classmethod
-    def from_file(cls, filepath, max_samples=None):
+    def from_file(cls, filepath, calibration=None, sample_rate=None):
         """Init from file using memory mapping"""
         
-        parts = parse_filename_parts(filepath)
-        if not parts.format: logging.error("No format tag")
-        sample_format = SampleFormatFromTag(parts.format)
+        params = parse_filename_parts(filepath)
+        if not params.format: 
+            logging.error("No format tag")
+            return
+        sample_format = SampleFormatFromTag(params.format)
 
         sample_bytes = sample_format.bytes
         file_size = os.path.getsize(filepath)
         nsamples = file_size // sample_bytes
-        if max_samples: nsamples = min(nsamples, max_samples)
 
-        data = np.memmap(
+        data = cls(np.memmap(
             filepath,
             dtype=sample_format.dtype,
             mode='r',
             shape=(nsamples,),
-        )
+        ), sample_format)
 
-        return cls(data, sample_format)
+        metadata = {}
+        metafile = Path(filepath).with_suffix('.meta')
+        if metafile.is_file():
+            with open(metafile, encoding='utf-8') as fp:
+                metadata = json.load(fp)
+
+        data.sample_rate = metadata.get('sample_rate', sample_rate)
+        data.calibration = metadata.get('calibration', calibration)
+        data.timestamp = params.get('timestamp', None)
+        data.hostname = params.get('hostname', None)
+        data.filepath = filepath
+        data.params = params
+
+        return data
 
     def save_to_file(self, filepath):
         """Save Data to filepath"""
@@ -64,7 +82,21 @@ class UUTData(np.ndarray):
         if dirpath: os.makedirs(dirpath, exist_ok=True)
         self.T.tofile(filepath)
 
+    def chan2volts(self, chan, input_range=None):
+        """Return channel data in volts using input range or calibration."""
+        chan = int(chan)
+        raw = self.adc[chan]
 
+        if input_range:
+            info = np.iinfo(raw.dtype)
+            return np.interp(raw.astype(np.float64), (info.min, info.max), input_range)
+
+        if self.calibration:
+            cal = self.calibration.get(chan)
+            return np.add(np.multiply(raw, cal['eslo']), cal['eoff'])
+
+        logging.warning(f"Unable to scale CH{chan:03d} to volts")
+        return raw
 
 class StreamDataFile(io.BufferedWriter):
     """BufferedWriter with optional file rotation"""
