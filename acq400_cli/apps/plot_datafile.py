@@ -20,9 +20,9 @@ def main(args):
         specs = []
 
         if args.plot_by == 'channel':
-            for chan in args.chans:
+            for chan in args.chan:
                 specs.append(FigSpec.from_spec({
-                    'chans': [chan],
+                    'chan': [chan],
                     'view': view,
                     'mask': args.mask,
                 }))
@@ -36,8 +36,8 @@ def main(args):
         if args.plot_by == 'source':
             for index in range(len(sources)):
                 specs.append(FigSpec.from_spec({
-                    'chans': args.chans,
-                    'sources': index,
+                    'chan': args.chan,
+                    'source': index,
                     'figure': index,
                     'view': view,
                     'mask': args.mask,
@@ -46,13 +46,13 @@ def main(args):
                 if args.spad:
                     specs.append(FigSpec.from_spec({
                         'spad': args.spad,
-                        'sources': index,
+                        'source': index,
                         'figure': index,
                         'mask': args.mask,
                     }))
 
     specs = FigSpec.resolve_relative(specs, max_rows=args.max_rows)
-
+    print(specs)
     plt = Plotter(
         specs=specs,
         sources=sources,
@@ -78,7 +78,7 @@ def get_parser():
     parser.add_argument('--pses', default=(0, None, 1), type=ArgTypes.start_end_stride, help='Plot start:end:stride')
     parser.add_argument('--mask', default=None, help='Mask samples')
 
-    parser.add_argument('--chans', default=[1], type=ArgTypes.list_of_channels, help='Channels to plot')
+    parser.add_argument('--chan', default=[1], type=ArgTypes.list_of_channels, help='Channels to plot')
     parser.add_argument('--spad', default=[], type=ArgTypes.list_of_channels, help='Spad Channels to plot')
 
     parser.add_argument('--plot_by', default='channel', choices=['carrier', 'channel'], help='Plot by source or by channel')

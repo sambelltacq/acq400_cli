@@ -16,10 +16,10 @@ from acq400_cli.parser import ArgTypes
 class FigSpec:
     figure: int                 #  `-1` auto figure or set explicitly `0,1` (default `-1`)
     row: int                    #  row within the figure, `-1` auto-increments (default `-1`)
-    chans: list | None          #  channels to plot, comma list and/or ranges (`1,3,5-8`)
+    chan: list | None           #  channels to plot, comma list and/or ranges (`1,3,5-8`)
     spad: list | None           #  SPAD channels to plot
     view: str                   #  Y-axis data type, `RAW` or `VOLTS` (default `RAW`)
-    sources: list               #  source indexes to read from, comma list (`0,1`) or `-1` for all (default `-1`)
+    source: list                #  source indexes to read from, comma list (`0,1`) or `-1` for all (default `-1`)
 
     bitmask: int | None         #  hex bit mask
     bitslice: int | None        #  hex bit mask; each set bit is plotted as its own trace
@@ -35,9 +35,9 @@ class FigSpec:
 
     @classmethod
     def from_spec(cls, spec):
-        chans = spec.get("chans", None)
-        if chans and not isinstance(chans, list):
-            chans = ArgTypes.list_of_channels(chans)
+        chan = spec.get("chan", None)
+        if chan and not isinstance(chan, list):
+            chan = ArgTypes.list_of_channels(chan)
 
         spad = spec.get("spad", None)
         if spad and not isinstance(spad, list):
@@ -46,10 +46,10 @@ class FigSpec:
         return cls(
             figure=int(spec.get("figure", -1)),
             row=int(spec.get("row", -1)),
-            chans=chans,
+            chan=chan,
             spad=spad,
             view=spec.get("view", "RAW"),
-            sources=ArgTypes.list_of_ints_comma(spec.get("sources", -1)),
+            source=ArgTypes.list_of_ints_comma(spec.get("source", -1)),
 
             bitmask=ArgTypes.hexstring(spec['bitmask']) if spec.get("bitmask", None) else None,
             bitslice=ArgTypes.hexstring(spec['bitslice']) if spec.get("bitslice", None) else None,
@@ -287,10 +287,10 @@ class Plotter:
         footer = {}
         for spec in specs:
             footer.setdefault(spec.figure, set())
-            if -1 in spec.sources: 
+            if -1 in spec.source: 
                 footer[spec.figure].update(range(len(self.sources)))
                 continue
-            for index in spec.sources:
+            for index in spec.source:
                 footer[spec.figure].add(index)
         return footer
 
@@ -357,7 +357,7 @@ class Plotter:
             if spec.title and not row.get_title():
                 row.set_title(spec.title)
 
-            for index, source in self.__get_source(spec.sources).items():
+            for index, source in self.__get_source(spec.source).items():
 
                 x = self.timebase[index]
 
@@ -369,8 +369,8 @@ class Plotter:
                     mask = self.__sample_mask(len(source), spec.mask)
                     x = x[:int(mask.sum())] 
 
-                if spec.chans is not None:
-                    for chan in spec.chans:
+                if spec.chan is not None:
+                    for chan in spec.chan:
                         logging.info(f"Plot CH{int(chan):03} from source[{index}] to figure[{spec.figure}] row[{spec.row}]")
                    
                         label_fmt = 'CH{chan}'

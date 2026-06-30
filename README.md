@@ -122,47 +122,47 @@ Plot a datafile from disk
 
 - **Plot by channel** - Plot channel 1-4 each channel from each source in own row
 ```bash
-acq400_cli plot_datafile --chans=1-4 --plot_by=channel <datafiles>
+acq400_cli plot_datafile --chan=1-4 --plot_by=channel <datafiles>
 ```
 
 - **Plot by source** - Plot channel 1,3 from each source in own figure
 ```bash
-acq400_cli plot_datafile -chans=1,3 --plot_by=source <datafiles>
+acq400_cli plot_datafile --chan=1,3 --plot_by=source <datafiles>
 ```
 
 - **Plot spad** - Plot channel 1 and spad 0
 ```bash
-acq400_cli plot_datafile --chans=1 --spad=0 <datafiles>
+acq400_cli plot_datafile --chan=1 --spad=0 <datafiles>
 ```
 
 - **Plot skip** - Plot channel 1 from 50K samples
 ```bash
-acq400_cli plot_datafile --chans=1 --pses=50K <datafiles>
+acq400_cli plot_datafile --chan=1 --pses=50K <datafiles>
 ```
 
 - **Plot truncate** - Plot channel 1 up to 50K samples
 ```bash
-acq400_cli plot_datafile --chans=1 --pses=:50K <datafiles>
+acq400_cli plot_datafile --chan=1 --pses=:50K <datafiles>
 ```
 
 - **Plot stride** - Plot channel 1 every 100th sample
 ```bash
-acq400_cli plot_datafile --chans=1 --pses=::100 <datafiles>
+acq400_cli plot_datafile --chan=1 --pses=::100 <datafiles>
 ```
 
 - **Plot exclude** - Plot channel 1 exclude every 5000th sample
 ```bash
-acq400_cli plot_datafile --chans=1 --mask=::5000 <datafiles>
+acq400_cli plot_datafile --chan=1 --mask=::5000 <datafiles>
 ```
 
 - **Plot seconds** - Plot channel 1 in seconds
 ```bash
-acq400_cli plot_datafile --chans=1 --secs <datafiles>
+acq400_cli plot_datafile --chan=1 --secs <datafiles>
 ```
 
 - **Plot volts** - Plot channel 1 in volts
 ```bash
-acq400_cli plot_datafile --chans=1 --egu <datafiles>
+acq400_cli plot_datafile --chan=1 --egu <datafiles>
 ```
 
 - **Plot format** - Plot data from pcfg2 file
@@ -256,9 +256,9 @@ acq400_cli plot_datafile --pcfg=my_plot.pcfg2 <datafiles>
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| **chans** | — | channels to plot. Comma list and/or ranges (`1,3,5-8`).|
+| **chan** | — | channels to plot. Comma list and/or ranges (`1,3,5-8`).|
 | **spad** | — | SPAD channels to plot.|
-| **sources** | `-1` | Source indexes to read from. Comma list (`0,1`) or `-1` for all|
+| **source** | `-1` | Source indexes to read from. Comma list (`0,1`) or `-1` for all|
 | **view** | `RAW` | Y-axis data type. `RAW` or `VOLTS` |
 | **figure** | `-1` | `-1` auto figure or set explicitly `0,1`|
 | **row** | `-1` | row within the figure. `-1` auto-increments |
