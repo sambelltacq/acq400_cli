@@ -52,7 +52,7 @@ def main(args):
                     }))
 
     specs = FigSpec.resolve_relative(specs, max_rows=args.max_rows)
-    print(specs)
+
     plt = Plotter(
         specs=specs,
         sources=sources,
@@ -78,7 +78,7 @@ def get_parser():
     parser.add_argument('--pses', default=(0, None, 1), type=ArgTypes.start_end_stride, help='Plot start:end:stride')
     parser.add_argument('--mask', default=None, help='Mask samples')
 
-    parser.add_argument('--chan', default=[1], type=ArgTypes.list_of_channels, help='Channels to plot')
+    parser.add_argument('--chan', '--chans', default=[1], type=ArgTypes.list_of_channels, help='Channels to plot')
     parser.add_argument('--spad', default=[], type=ArgTypes.list_of_channels, help='Spad Channels to plot')
 
     parser.add_argument('--plot_by', default='channel', choices=['carrier', 'channel'], help='Plot by source or by channel')
