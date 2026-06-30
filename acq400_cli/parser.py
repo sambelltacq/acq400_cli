@@ -4,6 +4,7 @@ argparsing classes
 
 
 import argparse
+from pathlib import Path
 from acq400_cli.utils import Triplet, SigGen
 from acq400_cli.constants import SIG_LINE, SENSE, RGM_MODE, GPG_MODE
 
@@ -143,6 +144,23 @@ class ArgTypes:
     @staticmethod
     def hexstring(arg):
         return arg if isinstance(arg, int) else int(arg.strip(), 16)
+
+    @staticmethod
+    def filepath(arg):
+        path = Path(arg).expanduser()
+        if not path.is_file():
+            raise ValueError(f"not a valid file: {arg}")
+        return str(path)
+
+    @staticmethod
+    def sample_indexes(arg):
+        indexes = []
+        for index in arg.split(','):
+            if ':' in index:
+                indexes.append(ArgTypes.start_end_stride(index))
+            else:
+                indexes.append(int(index))
+        return indexes
 
 class ArgParser(argparse.ArgumentParser):
     def __init__(self, *args, **kwargs):
