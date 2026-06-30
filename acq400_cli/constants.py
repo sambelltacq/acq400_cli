@@ -149,6 +149,18 @@ class COLORS:
         if not color or not COLORS.COLOR_EN: return string
         return f"{color}{string}{COLORS.RESET}"
 
+
+PLOT_TRACE_COLORS = (
+    '#1515c4',
+    '#f21a1a',
+    '#21b321',
+    '#000000',
+    '#8000ff',
+    '#ffaa00',
+    '#ff00f0',
+    '#f38484',
+)
+
 #http://eigg:8090/mediawiki/index.php/Products:ACQ400:ACQ400_Data_Format
 class EventSignature:
     pass
