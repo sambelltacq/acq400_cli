@@ -1,0 +1,4 @@
+#plot channel 1-4 from source 0 in volts
+#plot channel 1-4 from source 1 in volts
+chan=1-4;view=VOLTS;title=Data 0 CH1;source=0
+chan=1-4;view=VOLTS;title=Data 1 CH1;source=1

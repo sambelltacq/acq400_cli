@@ -1,0 +1,3 @@
+#plot channel 1 in volts and spad 0
+chan=1;view=VOLTS;title=CH1
+spad=0;title=Sample count

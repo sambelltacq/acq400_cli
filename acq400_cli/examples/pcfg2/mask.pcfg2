@@ -1,0 +1,2 @@
+#plot channel 1 excluding event signatures
+chan=1;mask=::5000
