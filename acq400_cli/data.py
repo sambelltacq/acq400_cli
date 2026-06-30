@@ -134,7 +134,7 @@ def parse_filename_parts(filepath):
         'format': None,
         'sequence': None,
         'channel': None,
-        'size': None,
+        'chan_size': None,
     })
     filename = os.path.splitext(os.path.basename(filepath))[0]
 
@@ -149,7 +149,7 @@ def parse_filename_parts(filepath):
         elif part.isnumeric():
             parts.sequence = part
         elif part.endswith('B'):
-            parts.size = int(part.removesuffix('B'))
+            parts.chan_size = int(part.removesuffix('B'))
     return parts
 
 def generate_array_mask(length, indexes, width=1):
