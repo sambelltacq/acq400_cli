@@ -92,7 +92,7 @@ class UUTData(np.ndarray):
             return np.interp(raw.astype(np.float64), (info.min, info.max), input_range)
 
         if self.calibration:
-            cal = self.calibration.get(chan)
+            cal = self.calibration.get(chan) or self.calibration.get(str(chan))
             return np.add(np.multiply(raw, cal['eslo']), cal['eoff'])
 
         logging.warning(f"Unable to scale CH{chan:03d} to volts")
