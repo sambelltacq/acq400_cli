@@ -140,6 +140,10 @@ class ArgTypes:
         if arg in ("0", "false", 'n'): return False
         return default
 
+    @staticmethod
+    def hexstring(arg):
+        return arg if isinstance(arg, int) else int(arg.strip(), 16)
+
 class ArgParser(argparse.ArgumentParser):
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('formatter_class', argparse.ArgumentDefaultsHelpFormatter)
