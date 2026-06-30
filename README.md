@@ -120,29 +120,54 @@ acq400_cli configure_capture --rgm=RTM,RISING --translen=5000 --trigger=SOFT,RIS
 
 Plot a datafile from disk
 
-- **By carrier** - Plot channel 1 each UUT gets its own figure
+- **Plot by channel** - Plot channel 1-4 each channel from each source in own row
 ```bash
-acq400_cli plot_datafile <datafiles>
+acq400_cli plot_datafile --chans=1-4 --plot_by=channel <datafiles>
 ```
 
-- **Channels** - Plot channel 1,2,3 each UUT gets its own figure
+- **Plot by source** - Plot channel 1,3 from each source in own figure
 ```bash
-acq400_cli plot_datafile --chans=1,2,3 <datafiles>
+acq400_cli plot_datafile -chans=1,3 --plot_by=source <datafiles>
 ```
 
-- **Plot start** - Plot channel 1,2,3 from 50K samples
+- **Plot spad** - Plot channel 1 and spad 0
 ```bash
-acq400_cli plot_datafile --chans=1,2,3 --pses=50K:: <datafiles>
+acq400_cli plot_datafile --chans=1 --spad=0 <datafiles>
 ```
 
-- **Plot stride** - Plot channel 1,2,3 every 100th sample
+- **Plot skip** - Plot channel 1 from 50K samples
 ```bash
-acq400_cli plot_datafile --chans=1,2,3 --pses=::100 <datafiles>
+acq400_cli plot_datafile --chans=1 --pses=50K <datafiles>
 ```
 
-- **Plot seconds** - Plot channel 1,2,3 with timebase
+- **Plot truncate** - Plot channel 1 up to 50K samples
 ```bash
-acq400_cli plot_datafile --chans=1,2,3 --rate=1M --secs <datafiles>
+acq400_cli plot_datafile --chans=1 --pses=:50K <datafiles>
+```
+
+- **Plot stride** - Plot channel 1 every 100th sample
+```bash
+acq400_cli plot_datafile --chans=1 --pses=::100 <datafiles>
+```
+
+- **Plot exclude** - Plot channel 1 exclude every 5000th sample
+```bash
+acq400_cli plot_datafile --chans=1 --mask=::5000 <datafiles>
+```
+
+- **Plot seconds** - Plot channel 1 in seconds
+```bash
+acq400_cli plot_datafile --chans=1 --secs <datafiles>
+```
+
+- **Plot volts** - Plot channel 1 in volts
+```bash
+acq400_cli plot_datafile --chans=1 --egu <datafiles>
+```
+
+- **Plot format** - Plot data from pcfg2 file
+```bash
+acq400_cli plot_datafile --pcfg=<pcfg2 file> <datafiles>
 ```
 
 ### Generate Hexdump
@@ -172,7 +197,15 @@ acq400_cli demux_data <datafiles>
 
 ### Triggers
 
-Trigger sources:
+Capture commands `--trigger`, `--event0`, `--event1`
+
+**Syntax**
+
+- **Short form:** `SOURCE,SENSE` - e.g. `--trigger=EXT,RISING`
+- **Source only:** `SOURCE` - defaults to rising edge, e.g. `--trigger=SOFT`
+- **Full triplet:** `enable,line,sense` - e.g. `--trigger=1,0,1` (set source with `--trigger_source` )
+
+#### Source:
 
 | Source | Description |
 |--------|-------------|
@@ -185,21 +218,60 @@ Trigger sources:
 | **WRTT1** | White Rabbit trigger (line 0) |
 | **AUTO** | Auto soft trigger. Only enables trigger when UUTs are armed |
 
+#### Sense:
+
+| Sense | Value | Description |
+|-------|-------|-------------|
+| **FALLING** | 0 | Trigger on falling edge|
+| **RISING** | 1 | Trigger on rising edge|
+
+
 
 ### Capture States
 
 | State | Value | Description |
-|-------|-------|-------------|
-| **IDLE** | 0 | ready to be armed |
+|--------|-------|-------------|
+| **IDLE** | 0 | Ready to be armed |
 | **ARM** | 1 | Armed and waiting for a trigger |
 | **RUN** | 2 | Stream Capturing |
-| **RUN_PRE** | 2 | Transient Pre Capturing |
-| **RUN_POST** | 3 | Transient Post Capturing |
+| **RUN_PRE** | 2 | Transient Pre Capture |
+| **RUN_POST** | 3 | Transient Post Capture |
 | **POST_PROCESS** / **POPROCESS** | 4 | Post-capture demuxing |
-| **CLEANUP** | 5 | Cleanup of capture processes |
+| **CLEANUP** | 5 | Cleanup capture |
 
 
-### Plot Configuration File (.pcfg)
+### Plot Configuration File V2 (.pcfg2)
+
+A `.pcfg2` file controls layout and trace options for `plot_datafile`
+
+ Each line defines **one subplot row**. Options are separated by **semicolons** (`;`) as `key=value` pairs
+
+
+```bash
+acq400_cli plot_datafile --pcfg=my_plot.pcfg2 <datafiles>
+```
+
+**Example**
+
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| **chans** | — | channels to plot. Comma list and/or ranges (`1,3,5-8`).|
+| **spad** | — | SPAD channels to plot.|
+| **sources** | `-1` | Source indexes to read from. Comma list (`0,1`) or `-1` for all|
+| **view** | `RAW` | Y-axis data type. `RAW` or `VOLTS` |
+| **figure** | `-1` | `-1` auto figure or set explicitly `0,1`|
+| **row** | `-1` | row within the figure. `-1` auto-increments |
+| **mask** | — | indexes and/or range to **exclude**|
+| **bitmask** | — | Hex bit mask |
+| **bitslice** | — | Hex bit mask; each set bit is plotted as its own trace|
+| **title** | — | Subplot row title. |
+| **figure_title** | — | Figure suptitle (first line wins)|
+| **label** | — | Legend label format string|
+| **legend** | `true` | Show legend on the row `true`/`false`|
+| **drawstyle** | `default` | draw style (`default`, `steps`, `steps-pre`, `steps-mid`, `steps-post`). |
+| **linestyle** | `-` | line style (`-`, `--`, `:`, `-.`). |
+
 ### Waveform Configuration File (.wcfg)
 ### Datafiles (.data, .chan)
 ### Test Configuration File (.tcfg)
