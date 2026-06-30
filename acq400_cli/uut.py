@@ -280,16 +280,11 @@ class Carrier:
             clk = self.s0.SIG__CLK_S1__FREQ
         return round(float(clk), -3)
 
-    @property
-    def vmax(self,):
-        """master voltage maximum"""
-        return self.ai_master.vmax
-
     @cached_property
     def calibration(self):
-        """get channel calibration"""
+        """get calibration from all channels"""
+        
         threads = []
-
         for num, site in sorted(self.ai_sites.items()):
             thread = RThread(target=getattr, args=(site, 'calibration'))
             thread.start()
@@ -298,11 +293,11 @@ class Carrier:
         calibration = {}
         chan = 1
         for thread in threads:
-            for eslo, eoff, max_scale in thread.join():
+            for eslo, eoff, input_range in thread.join():
                 calibration[chan] = {
                     'eslo': eslo,
                     'eoff': eoff,
-                    'max_scale': max_scale,
+                    'input_range': input_range,
                 }
                 chan += 1
         return calibration

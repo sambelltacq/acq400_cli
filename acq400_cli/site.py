@@ -186,13 +186,51 @@ class Site:
             features.append('dio')
         return features
 
-    @cached_property
+    @property
+    def input_range(self):
+        """return max scale channel array"""
+        input_range = self.gains
+        if input_range: return input_range
+
+        input_range = 10
+        PART_NUM = self.PART_NUM
+        match = re.search('([.\d]+)V', PART_NUM)
+
+        if match: input_range = int((match.group(1)))
+        if PART_NUM.find('2V5') >= 0: input_range = 2.5
+        if PART_NUM.startswith('ACQ480'): input_range = 2.5
+        
+        return [(-abs(input_range), input_range)] * self.nchan
+
+    @property
+    def eslo(self):
+        """return eslo array"""
+        return list(map(float, self.AI__CAL__ESLO.split(" ")[2:]))
+
+    @property
+    def eoff(self):
+        """return eoff array"""
+        return list(map(float, self.AI__CAL__EOFF.split(" ")[2:]))
+
+    @property
+    def gains(self):
+        """return channel gains array"""
+        gains = []
+        try:
+            for chan in range(1, self.nchan + 1):
+                gain = self.get(f"gain{chan}")
+
+                if gain.startswith('M'):
+                    gain = gain.removeprefix('M')
+                lower, upper = gain.split('-')
+                gains.append((-abs(float(lower)), float(upper)))
+            return gains
+        except: return None
+
+    @property
     def calibration(self):
-        """Return site calibration"""
-        max_scale = self.vmax
-        eslo_arr = list(map(float, self.AI__CAL__ESLO.split(" ")[2:]))
-        eoff_arr = list(map(float, self.AI__CAL__EOFF.split(" ")[2:]))
-        return [(eslo, eoff, max_scale) for eslo, eoff in zip(eslo_arr, eoff_arr)]
+        """Return channel calibration"""
+        return list(zip(self.eslo, self.eoff, self.input_range))
 
     @property
     def role(self):
@@ -213,21 +251,6 @@ class Site:
     def nchan(self):
         """Return number of channels"""
         return int(self.active_chan)
-
-    @cached_property
-    def vmax(self):
-        """Return voltage max"""
-        if not self.is_ai: return 0 
-        PART_NUM = self.PART_NUM
-
-        match = re.search('([.\d]+)V', PART_NUM)
-        if match: return int((match.group(1)))
-   
-        if PART_NUM.find('2V5') >= 0: return 2.5
-        if PART_NUM.find('ER') >= 0: return 20
-        if PART_NUM.startswith('ACQ480'): return 2.5
-
-        return 10
 
     @property
     def spec(self):
