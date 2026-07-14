@@ -126,9 +126,7 @@ class Site:
     # Normal methods
     def knob_exists(self, knob):
         """Check knob existence return bool"""
-        try: self.get(knob)
-        except KnobNotFoundError: return False
-        return True
+        return self.escape_knob(knob) in self.knobs
 
     def get(self, knob, default=False):
         """Get knob value with optional default"""
