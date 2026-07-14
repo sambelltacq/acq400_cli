@@ -431,6 +431,18 @@ class Carrier:
 
         return config
 
+    @property
+    def bolo_calibration(self, start_chan=1):
+        """Get BOLO calibration values"""
+        keys = ('sensitivity', 'cooling', 'ioff', 'qoff')
+        rows = zip(
+            map(float, self.dsp.CAL__SENS.split()),
+            map(float, self.dsp.CAL__TAU.split()),
+            map(float, self.dsp.CAL__IOFF.split()),
+            map(float, self.dsp.CAL__QOFF.split()),
+        )
+        return {chan: dict(zip(keys, row)) for chan, row in enumerate(rows, start_chan)}
+
     # Normal methods
 
     def abort_capture(self):
