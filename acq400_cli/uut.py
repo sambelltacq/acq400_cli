@@ -809,8 +809,13 @@ class Carrier:
         if hasattr(event0, 'source') and event0.source: self.set_trigger_source(event0.source)
         
         self.ai_master.event1 = event1
-        self.ai_master.rgm = rgm
-        self.ai_master.RTM_TRANSLEN = translen
+
+        if self.ai_master.knob_exists('rgm'): 
+            self.ai_master.rgm = rgm
+            
+        if self.ai_master.knob_exists('RTM_TRANSLEN'): 
+            self.ai_master.RTM_TRANSLEN = translen
+        
         self.set_stream_mask(stream_mask)
         
         # Slave UUTs cannot soft trigger
