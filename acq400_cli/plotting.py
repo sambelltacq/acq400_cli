@@ -258,7 +258,6 @@ class Plotter:
         """Return formatted label"""
         label_fmt = label_fmt if spec.legend else '__nolabel__'
         label_fmt = spec.label if spec.label else label_fmt
-        print(f"{chan} gen_label {index}")
         if len(self.footer[spec.figure]) > 1: label_fmt = f"[{index}] {label_fmt}"
         return label_fmt.format(chan=chan, bit=bit)
 
