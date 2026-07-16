@@ -5,7 +5,7 @@ Plotting code
 """
 import logging
 import numpy as np
-from cycler import cycler
+
 from matplotlib import pyplot as plt
 from dataclasses import dataclass, replace
 from itertools import product
@@ -228,7 +228,7 @@ class Plotter:
         )
 
         for ax in axs.flat:
-            ax.set_prop_cycle(cycler(color=PLOT_TRACE_COLORS))
+            ax.set_prop_cycle(color=PLOT_TRACE_COLORS)
 
         self.figs[figure] = (fig, axs)
         return self.figs[figure]
