@@ -978,7 +978,39 @@ class Carrier:
             json.dump(metadata, fp, indent=4, ensure_ascii=False)
 
 
+    def run_service(self, port, eof="EOF", service_name=None):
+        """Run a service on the uut, return transcript lines until eof"""
 
+        if not service_name:
+            if port in PORTS:
+                service_name = PORTS(port).name
+            else:
+                service_name = str(port)
+
+        print(f"[SERVICE START] {service_name} on {self.addr}")
+        txt = []
+        buffer = ''
+        with socket.socket() as sock:
+            sock.connect((self.addr, port))
+            done = False
+            while not done:
+                chunk = sock.recv(4096)
+                if not chunk:
+                    break
+                buffer += chunk.decode('latin-1')
+                while '\n' in buffer:
+                    line, buffer = buffer.split('\n', 1)
+                    txt.append(line)
+                    print(f"{service_name}> {line}")
+                    if line.startswith(eof):
+                        done = True
+                        break
+
+        print(f"[SERVICE END] {service_name} on {self.addr}")
+        logname = f'{service_name}.service.log'
+        with open(logname, 'a') as fp:
+            fp.write('\n'.join(txt) + '\n')
+        return txt
 
 class Collection(list):
     """A class representing multiple UUTs"""
