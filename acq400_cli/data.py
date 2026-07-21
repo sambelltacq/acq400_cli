@@ -165,12 +165,13 @@ def parse_filename_parts(filepath):
         'timestamp': None,
         'format': None,
         'sequence': None,
-        'channel': None,
-        'chan_size': None,
+        'ext': None,
+        'labels': [],
     })
-    filename = os.path.splitext(os.path.basename(filepath))[0]
+    file_parts = os.path.basename(filepath).split('.')
+    if len(file_parts) > 1: parts.ext = file_parts.pop()
 
-    for part in filename.split('.'):
+    for part in file_parts:
         upper = part.upper()
         if upper.startswith(('ACQ', 'Z7IO', 'KMCUZ')):
             parts.hostname = part
@@ -180,8 +181,8 @@ def parse_filename_parts(filepath):
             parts.format = part
         elif part.isnumeric():
             parts.sequence = part
-        elif part.endswith('B'):
-            parts.chan_size = int(part.removesuffix('B'))
+        else:
+            parts.labels.append(part)
     return parts
 
 def generate_array_mask(length, indexes, width=1):
