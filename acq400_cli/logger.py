@@ -40,7 +40,7 @@ class Logger:
 
     escape_codes = {
         'reset': "\x1b[0m",
-        'yellow': "\x1b[38;5;226m",
+        'yellow': "\x1b[38;5;220m",
         'red': "\x1b[38;5;196m",
         'green': "\x1b[38;5;46m",
         'boldred': "\x1b[1;38;5;196m",
