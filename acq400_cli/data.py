@@ -20,13 +20,11 @@ class Dataset:pass
 class UUTData(np.ndarray):
     """Wrapper class for UUT data"""
 
-    def __new__(cls, input_array, sample_format, calibration=None):
+    def __new__(cls, input_array, sample_format):
 
         obj = np.asanyarray(input_array).view(cls)
 
         obj.sample_format = sample_format
-        obj.calibration = calibration
-
         obj.channels = {chan: obj[str(chan)].view(np.ndarray) for chan in sample_format.channels}
         obj.adc = {chan: obj[str(chan)].view(np.ndarray) for chan in sample_format.types.get('ADC', [])}
         obj.dio = {chan: obj[str(chan)].view(np.ndarray) for chan in sample_format.types.get('DIO', [])}
@@ -38,20 +36,40 @@ class UUTData(np.ndarray):
 
     def __str__(self):
         return f"<UUT Data {len(self)} Samples x {self.sample_format.tag} ({self.sample_format.bytes} Bytes)>"
+    
+    @classmethod
+    def from_uut(cls, raw, sample_format, calibration, sample_rate, hostname):
+        """Init from UUT"""
+
+        data = cls(
+            raw,
+            sample_format,
+        )
+
+        data.hostname = hostname
+        data.sample_rate = sample_rate
+        data.calibration = calibration
+        data.timestamp = None
+        data.filepath = None
+
+        return data
 
     @classmethod
-    def from_file(cls, filepath, calibration=None, sample_rate=None):
+    def from_file(cls, filepath, format=None, calibration=None, sample_rate=None):
         """Init from file using memory mapping"""
         
-        params = parse_filename_parts(filepath)
-        if not params.format: 
-            logging.error("No format tag")
-            return
-        sample_format = SampleFormatFromTag(params.format)
+        filename_attrs = parse_filename_parts(filepath)
+        metadata = cls.__import_metadata(filepath)
+        print(metadata)
 
-        sample_bytes = sample_format.bytes
-        file_size = os.path.getsize(filepath)
-        nsamples = file_size // sample_bytes
+        if not filename_attrs.format:
+            if not format:
+                logging.error(f"Unable to parser format {filepath}")
+                return None
+            filename_attrs.format = format
+
+        sample_format = SampleFormatFromTag(file_params.format)
+        nsamples = cls.__trim_samples(sample_format.bytes, filepath)
 
         data = cls(np.memmap(
             filepath,
@@ -60,20 +78,32 @@ class UUTData(np.ndarray):
             shape=(nsamples,),
         ), sample_format)
 
-        metadata = {}
-        metafile = Path(filepath).with_suffix('.meta')
-        if metafile.is_file():
-            with open(metafile, encoding='utf-8') as fp:
-                metadata = json.load(fp)
-
+        data.hostname = filename_attrs.get('hostname', hostname)
         data.sample_rate = metadata.get('sample_rate', sample_rate)
         data.calibration = metadata.get('calibration', calibration)
-        data.timestamp = params.get('timestamp', None)
-        data.hostname = params.get('hostname', None)
+        data.timestamp = filename_attrs.get('timestamp', None)
         data.filepath = filepath
-        data.params = params
 
         return data
+
+    @classmethod
+    def __trim_samples(cls, sample_size, filepath):
+        """Return nbytes trimmed to sample_size"""
+        file_bytes = os.path.getsize(filepath)
+        return file_bytes // sample_size
+
+    @classmethod
+    def __import_metadata(cls, filepath):
+        """Import metadata if exists"""
+        metadata = {}
+        filepath = Path(filepath).with_suffix('.meta')
+        if filepath.is_file():
+            try:
+                with open(filepath, encoding='utf-8') as fp:
+                    metadata = json.load(fp)
+            except:
+                logging.error(f"Unable to import metadata {filepath}")
+        return metadata
 
     def save_to_file(self, filepath):
         """Save Data to filepath"""
@@ -83,20 +113,24 @@ class UUTData(np.ndarray):
         self.T.tofile(filepath)
 
     def chan2volts(self, chan, input_range=None):
-        """Return channel data in volts using input range or calibration."""
-        chan = int(chan)
-        raw = self.adc[chan]
+        """Return channel data in volts using calibration or range"""
+        chan_data = self.adc[int(chan)]
 
         if input_range:
-            info = np.iinfo(raw.dtype)
-            return np.interp(raw.astype(np.float64), (info.min, info.max), input_range)
+            info = np.iinfo(chan_data.dtype)
+            return np.interp(chan_data.astype(np.float64), (info.min, info.max), input_range)
 
         if self.calibration:
-            cal = self.calibration.get(chan) or self.calibration.get(str(chan))
-            return np.add(np.multiply(raw, cal['eslo']), cal['eoff'])
+            cal = self.calibration.get(int(chan), self.calibration.get(str(chan), None))
+            if cal is not None:
+                # IF datasize 32bit discard digital ID encoded in 8 LSBs of data word
+                # then scale data to 24-bit to match calibration coefficients
+                if chan_data.dtype.itemsize == 4: chan_data = chan_data // 256
+                return np.add(np.multiply(chan_data, cal['eslo']), cal['eoff'])
 
-        logging.warning(f"Unable to scale CH{chan:03d} to volts")
-        return raw
+        logging.warning(f"Unable to calibrate CH{chan}")
+
+        return chan_data
 
 class StreamDataFile(io.BufferedWriter):
     """BufferedWriter with optional file rotation"""
