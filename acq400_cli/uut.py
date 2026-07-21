@@ -472,7 +472,7 @@ class Carrier:
 
         while True:
             if self.capture_state in (CAPTURE_STATE.ARM, CAPTURE_STATE.RUN): break
-            if int(self.ai_master.SHOT) - int(getattr("self", "current_shot", 0)) == 1: break
+            if int(self.ai_master.SHOT) - int(getattr(self, "current_shot", 0)) == 1: break
             t1 = time.time() - t0
             if timeout and t1 > timeout: 
                 raise TimeoutError(f'{self.addr} failed to reach ARM after {timeout}s stuck in {self.capture_state.name}')
