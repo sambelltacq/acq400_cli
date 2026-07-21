@@ -921,7 +921,7 @@ class Carrier:
                 parts.append(block)
         return b"".join(parts).decode()
 
-    def configure_gpg(self, stl, mode, timescaler=1, trigger=None, clock=None):
+    def configure_gpg(self, stl, mode, timescaler=1, trigger=None, clock=None, stl_name=None):
         """Configure GPG for output"""
         if not self.has_gpg: raise GPGNotAvailableError(f"{self.addr} GPG not available (enable package)")
 
@@ -942,25 +942,41 @@ class Carrier:
             self.s0.GPG_CLK__DX = clock.line
             self.s0.GPG_CLK__SENSE = clock.sense
 
-        self.s0.SIG_EVENT_SRC_0 = 'GPG'
-        self.s0.SIG_FP_GPIO = 'EVT0'
+        self.s0.SIG__EVENT_SRC__1 = 'GPG'
+        self.s0.SIG__FP__GPIO = 'EVT1'
 
         if isinstance(stl, str):
             logging.debug(f"{self.addr} reading file {stl}")
+            stl_name = stl
             with open(stl, 'r') as fp:
                 stl = []
                 for line in fp.readlines():
                     line = line.strip()
                     if not line or line.startswith('#'): continue
                     stl.append(line)
-        stl.append("EOF")
+        else:
+            stl = list(stl)
+        if not stl or stl[-1] != "EOF":
+            stl.append("EOF")
 
-        with socket.socket() as sock:
-            sock.connect((self.addr, PORTS.GPGSTL))
-            for line in stl:
-                sock.send(f"{line}\n".encode())
-                rx = sock.recv(4096).decode().strip()
-                logging.trace(f"{self.addr} {line} {rx}")
+        last_err = None
+        for attempt in range(1, 33):
+            try:
+                with socket.socket() as sock:
+                    sock.connect((self.addr, PORTS.GPGSTL))
+                    for line in stl:
+                        sock.send(f"{line}\n".encode())
+                        rx = sock.recv(4096).decode().strip()
+                        logging.trace(f"{self.addr} {line} {rx}")
+                break
+            except ConnectionResetError as e:
+                last_err = e
+                logging.warning(f"{self.addr} GPG STL upload reset (attempt {attempt}/3)")
+                time.sleep(0.2)
+        else:
+            raise last_err
+
+        if stl_name: self.s0.pulse_def = stl_name
 
         self.s0.GPG__ENABLE = 1
 
