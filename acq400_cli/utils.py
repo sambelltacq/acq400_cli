@@ -26,7 +26,9 @@ class Triplet(str):
     def __getitem__(self, key):
         return int(self.split(',')[key])
 
-    def __getattr__ (self, attr):
+    def __getattr__(self, attr):
+        if attr not in self.keys:
+            raise AttributeError(f"{type(self).__name__!r} object has no attribute {attr!r}")
         return int(self[self.keys.index(attr)])
     
     def override(self, name, value):

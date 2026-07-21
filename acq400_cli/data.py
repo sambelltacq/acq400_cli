@@ -60,7 +60,6 @@ class UUTData(np.ndarray):
         
         filename_attrs = parse_filename_parts(filepath)
         metadata = cls.__import_metadata(filepath)
-        print(metadata)
 
         if not filename_attrs.format:
             if not format:
@@ -68,7 +67,7 @@ class UUTData(np.ndarray):
                 return None
             filename_attrs.format = format
 
-        sample_format = SampleFormatFromTag(file_params.format)
+        sample_format = SampleFormatFromTag(filename_attrs.format)
         nsamples = cls.__trim_samples(sample_format.bytes, filepath)
 
         data = cls(np.memmap(
@@ -78,7 +77,7 @@ class UUTData(np.ndarray):
             shape=(nsamples,),
         ), sample_format)
 
-        data.hostname = filename_attrs.get('hostname', hostname)
+        data.hostname = filename_attrs.get('hostname', None)
         data.sample_rate = metadata.get('sample_rate', sample_rate)
         data.calibration = metadata.get('calibration', calibration)
         data.timestamp = filename_attrs.get('timestamp', None)

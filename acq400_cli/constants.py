@@ -7,6 +7,10 @@ from enum import IntEnum
 
 TIMESTAMP_FMT = "%y-%m-%d_%H-%M-%S"
 
+DATE_FMT = "%y-%m-%d"
+
+POWER_MW_SCALE = 1.25 * 3.64e-6 * 1000
+
 MAX_ETH_RATE=30
 
 
