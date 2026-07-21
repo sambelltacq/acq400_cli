@@ -5,7 +5,7 @@ Plotting code
 """
 import logging
 import numpy as np
-
+from pathlib import Path
 from matplotlib import pyplot as plt
 from dataclasses import dataclass, replace
 from acq400_cli.constants import PLOT_TRACE_COLORS, POWER_MW_SCALE
@@ -30,6 +30,7 @@ class FigSpec:
     figure_title: str | None    #  figure suptitle (first line wins)
     drawstyle: str              #  draw style (`default`, `steps`, `steps-pre`, `steps-mid`, `steps-post`)
     linestyle: str              #  line style (`-`, `--`, `:`, `-.`)
+    color: str | None           #  trace color, or None to use default color cycle
 
 
     @classmethod
@@ -59,7 +60,8 @@ class FigSpec:
             legend=ArgTypes.bool_string(spec.get("legend"), True),
             figure_title=spec.get("figure_title", None),
             drawstyle=spec.get("drawstyle",'default'),
-            linestyle=spec.get("linestyle", '-')
+            linestyle=spec.get("linestyle", '-'),
+            color=spec.get("color", None),
         )
 
     @classmethod
@@ -137,9 +139,10 @@ class Plotter:
         units='SAMPLES',
         max_scale=10,
         sample_rate=None,
-        max_samples=100_000,
+        max_samples=None,
         fig_width=10,
         row_height=2,
+        sharey=False,
     ):
         self.figs = {}
 
@@ -151,6 +154,7 @@ class Plotter:
 
         self.fig_width=fig_width
         self.row_height=row_height
+        self.sharey = sharey
 
         self.footer = self.__gen_footer(specs)
         self.timebase = self.__gen_timebase(self.units, sources)
@@ -170,6 +174,8 @@ class Plotter:
 
     def __clamp_pses(self, pses, max_samples):
         """Limit pses to max_samples """
+        if max_samples is None:
+            return pses
         start, end, stride = pses
         stride = max(1, stride)
         if end is not None and len(range(start, end, stride)) <= max_samples:
@@ -223,6 +229,7 @@ class Plotter:
             rows, 1,
             figsize=(self.fig_width, max(4, self.row_height * rows)),
             sharex=True,
+            sharey=self.sharey,
             squeeze=False,
         )
 
@@ -260,10 +267,18 @@ class Plotter:
         if len(self.footer[spec.figure]) > 1: label_fmt = f"[{index}] {label_fmt}"
         return label_fmt.format(chan=chan, bit=bit)
 
+    def __get_style(self, spec):
+        """Return trace styles from spec"""
+        style = {}
+        if spec.drawstyle: style['drawstyle'] = spec.drawstyle
+        if spec.linestyle: style['linestyle'] = spec.linestyle
+        if spec.color: style['color'] = spec.color
+        return style
+
     def __plot_data(self, row, x, y, label_fmt, index, chan, spec):
         """Plot channel to row"""
-        drawstyle = spec.drawstyle if spec.drawstyle else 'default'
-        linestyle = spec.linestyle if spec.linestyle else '-'
+
+        style = self.__get_style(spec)
 
         start, end, stride = self.pses
         y = y[start:end:stride]
@@ -274,12 +289,12 @@ class Plotter:
             for bit in range(y.dtype.itemsize * 8):
                 if spec.bitslice & (1 << bit):
                     label = self.__gen_label(label_fmt, spec, index, chan, bit)
-                    row.plot(x, (y >> bit) & 1, label=label, drawstyle=drawstyle, linestyle=linestyle)
+                    row.plot(x, (y >> bit) & 1, label=label, **style)
         else:
             if spec.bitmask:
                 y = y & spec.bitmask
             label = self.__gen_label(label_fmt, spec, index, chan)
-            row.plot(x, y, label=label, drawstyle=drawstyle, linestyle=linestyle)
+            row.plot(x, y, label=label, **style)
 
     def __gen_footer(self, specs):
         """gen map of figures to sources for footer"""
@@ -317,32 +332,42 @@ class Plotter:
 
     def __gen_title(self):
         """Auto generate the title if none set"""
+        keys = ('hostname', 'timestamp', 'format')
+
         for figure, (fig, axs) in self.figs.items():
             if fig.get_suptitle(): continue
-            title = []
-            parts = {}
-            for index in self.footer[figure]:
-                for key, value in self.sources[index].params.items():
-                    parts.setdefault(key, set()).add(value)
 
-            for key, value in parts.items():
-                if key == 'hostname': continue
-                if len(value) == 1:
-                    parts[key].clear()
-                    parts[key].add(None)
+            indexes = sorted(self.footer.get(figure, ()))
+            if not indexes: continue
 
-            keys = list(parts.keys())
-            for values in product(*parts.values()):
-                combo = dict(zip(keys, values))
-                title_text = []
-                if combo['hostname']:
-                    title_text.append(combo['hostname'])
-                if combo['timestamp']:
-                    title_text.append(combo['timestamp'])
-                if combo['format']:
-                    title_text.append(combo['format']) 
-                title.append(' '.join(title_text))
-            fig.suptitle(' - '.join(title))
+            attrs_list = []
+            for index in indexes:
+                source = self.sources[index]
+                sample_format = getattr(source, 'sample_format', None)
+                values = {
+                    'hostname': getattr(source, 'hostname', None),
+                    'timestamp': getattr(source, 'timestamp', None),
+                    'format': getattr(sample_format, 'tag', None),
+                }
+                attrs_list.append({key: values[key] for key in keys})
+
+            if len(attrs_list) == 1:
+                show_keys = [key for key in keys if attrs_list[0].get(key)]
+            else:
+                show_keys = [
+                    key for key in keys
+                    if len({attrs.get(key) for attrs in attrs_list}) > 1
+                ]
+
+            parts = []
+            for index, attrs in zip(indexes, attrs_list):
+                pieces = [str(attrs[key]) for key in show_keys if attrs.get(key)]
+                if not pieces: continue
+                text = ' '.join(pieces)
+                parts.append(text)
+
+            if parts:
+                fig.suptitle(' - '.join(parts))
 
     def __plot_specs(self, specs):
         """Plot each spec"""
