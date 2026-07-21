@@ -224,14 +224,14 @@ class Carrier:
     @property
     def agg_sites(self):
         """Return sites in the aggregator"""
-        sites = self.aggregator['sites']
+        sites = self.aggregator.sites
         if sites.upper() == 'NONE': return []
         return list(map(int, sites.split(',')))
 
     @property
     def dist_sites(self):
         """Return sites in the aggregator"""
-        sites = self.distributor['sites']
+        sites = self.distributor.sites
         if sites.upper() == 'NONE': return []
         return list(map(int, sites.split(',')))
 
