@@ -8,8 +8,7 @@ import numpy as np
 
 from matplotlib import pyplot as plt
 from dataclasses import dataclass, replace
-from itertools import product
-from acq400_cli.constants import PLOT_TRACE_COLORS
+from acq400_cli.constants import PLOT_TRACE_COLORS, POWER_MW_SCALE
 from acq400_cli.parser import ArgTypes
 
 @dataclass
@@ -18,7 +17,7 @@ class FigSpec:
     row: int                    #  row within the figure, `-1` auto-increments (default `-1`)
     chan: list | None           #  channels to plot, comma list and/or ranges (`1,3,5-8`)
     spad: list | None           #  SPAD channels to plot
-    view: str                   #  Y-axis data type, `RAW` or `VOLTS` (default `RAW`)
+    view: str                   #  Y-axis data type, `RAW`, `VOLTS` or `POWER` (default `RAW`)
     source: list                #  source indexes to read from, comma list (`0,1`) or `-1` for all (default `-1`)
 
     bitmask: int | None         #  hex bit mask
@@ -134,7 +133,7 @@ class Plotter:
         self,
         specs,
         sources,
-        pses=(0, None, 100),
+        pses=(0, None, 1),
         units='SAMPLES',
         max_scale=10,
         sample_rate=None,
@@ -362,7 +361,12 @@ class Plotter:
                 x = self.timebase[index]
 
                 if not row.get_ylabel():
-                    y_label = 'Volts (v)' if spec.view == 'VOLTS' else 'Codes'
+                    if spec.view == 'VOLTS':
+                        y_label = 'Volts (V)'
+                    elif spec.view == 'POWER':
+                        y_label = 'Power (mW)'
+                    else:
+                        y_label = 'Codes'
                     row.set_ylabel(y_label)
 
                 if spec.mask:
@@ -375,8 +379,10 @@ class Plotter:
                    
                         label_fmt = 'CH{chan}'
                         y = source.channels.get(int(chan))
-                        if spec.view == 'VOLTS': 
+                        if spec.view == 'VOLTS':
                             y = source.chan2volts(int(chan))
+                        elif spec.view == 'POWER':
+                            y = y * POWER_MW_SCALE
                         if spec.mask is not None: y = y[mask]
 
                         self.__plot_data(row, x, y, label_fmt, index, chan, spec)
