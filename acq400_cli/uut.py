@@ -550,12 +550,12 @@ class Carrier:
             raw = np.empty(tsamples, dtype=sample_format.dtype)
             for chan in sample_format.channels:
                 raw[str(chan)] = self.read_from_port(PORTS.DATA0 + chan, sample_format.channels[chan].dtype, tsamples)
-            data = UUTData(raw, sample_format)
         else:
-            data = UUTData(self.read_from_port(PORTS.DATA0, sample_format.dtype, tsamples), sample_format)
+            raw = self.read_from_port(PORTS.DATA0, sample_format.dtype, tsamples)
 
-        nsamples = data.nbytes // sample_format.bytes
-        logging.info(f"Read {nsamples} samples ({data.nbytes / (1024 * 1024):.2f} MB) from {self.hostname}")
+        data = UUTData.from_uut(raw, sample_format, self.calibration, self.sample_rate, self.hostname)
+
+        logging.info(f"Read {data.length} samples ({data.nbytes / (1024 * 1024):.2f} MB) from {self.hostname}")
         return data
 
     def stream_to_host(self, target_bytes, port=PORTS.STREAM, sample_format=None, datafile=None, bufferlen=4*(1024*1014)):
