@@ -1071,6 +1071,107 @@ class Carrier:
             fp.write('\n'.join(txt) + '\n')
         return txt
 
+    def load_awg(self, waveform, mode='ONCE', repeat=0):
+        """Load waveform into AWG"""
+
+        if not self.is_awg_idle:
+            logging.error("AWG in use unable to load waveform")
+            return False
+        
+        mode = AWG_MODE(mode)
+        port = mode.value
+        buffer = waveform.tobytes()
+
+        logging.info(f"Sending {len(buffer)} Bytes to {self.addr}:{port} ({mode.name})")
+
+        self.upload_to_port(port, buffer, repeat)
+
+    def load_awg_seg(self, waveform, segment, mode='REARM', repeat=0):
+        """Load waveform into AWG segment"""
+
+        if not self.ao_master: return
+        if not self.is_awg_idle:
+            logging.error("Unable to load waveform; AWG not IDLE")
+            return False
+
+        if isinstance(segment, str):
+            segment = ord(segment.upper()) - ord('A')
+        max_awg_seg = self.max_awg_seg
+
+        if segment > max_awg_seg:
+            logging.error(f"Segment {segment} is beyond max seg {max_awg_seg}")
+            return False
+
+        mode = AWG_SEG_MODE(mode)
+        port = mode.value + (10 * segment)
+        buffer = waveform.tobytes()
+        seg_char = chr(ord('A') + segment)
+
+        logging.info(f"Uploading AWG {len(buffer)} Bytes to {self.addr}:{port} (SEG_{seg_char}_{mode.name})")
+
+        self.upload_to_port(port, buffer, repeat)
+
+    def set_awg_segment(self, segment):
+        """Set next segment"""
+        if not isinstance(segment, str):
+            segment = chr(ord('A') + segment)
+        with socket.socket() as sock:
+            sock.connect((self.addr, PORTS.AWG_SEGMENT_SELECT))
+            sock.send(segment.upper().encode())
+
+    def abort_awg(self, timeout=5):
+        """Request AWG abort and wait for AWG IDLE"""
+        if not self.ao_master: return
+        self.ao_master.AWG__MODE__ABO = 1
+        t0 = time.time()
+        while not self.is_awg_idle:
+            time.sleep(1)
+            if time.time() - t0 > timeout:
+                logging.warning(f"AWG failed to abort after {timeout}s")
+                return False
+        return True
+
+    def stream_to_awg(self, waveforms):
+        """Stream waveforms to awg"""
+
+        self.stream_awg_flag = True
+        if isinstance(waveforms, np.ndarray):
+            waveforms = [waveforms]
+
+        buffers = [waveform.tobytes() for waveform in waveforms]
+
+        logging.info(f"{self.hostname} AWG stream start")
+        index = 0
+
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 8 * 1024 * 1024)
+            sock.connect((self.addr, PORTS.AWG_STREAM))
+            try:
+                while self.stream_awg_flag:
+                    sock.sendall(buffers[index])
+                    index = (index + 1) % len(buffers)
+            except KeyboardInterrupt:
+                pass
+
+        logging.info(f"{self.hostname} AWG stream finish")
+
+    def upload_to_port(self, port, buffer, repeat=0):
+        """Upload bytes to port"""
+        with socket.socket() as sock:
+            sock.connect((self.addr, port))
+            sock.sendall(buffer)
+            for _ in range(repeat):
+                sock.sendall(buffer)
+            sock.shutdown(socket.SHUT_WR)
+            while True:
+                rx = sock.recv(128)
+                if not rx: break
+                print(f"{self.addr}:{port}> {rx.decode('latin-1').strip()}")
+                if rx.startswith(b"DONE"): break
+
+   
+
 class Collection(list):
     """A class representing multiple UUTs"""
 
