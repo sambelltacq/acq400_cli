@@ -56,12 +56,15 @@ class PORTS(AutoIntEnum):
     DATA_SPY = 53667
     LIVETOP = 53998
     ONESHOT = 53999
+
     AWG_ONCE = 54201
     AWG_AUTOREARM = 54202
     AWG_CONTINUOUS = 54205
     AWG_STREAM = 54207
     AWG_SEGMENT_SELECT = 54210
     AWG_SEGMENT_LOAD_ONESHOT = 54212
+    AWG_SEGMENT_LOAD_CONTINUOUS = 54215
+
     MGTDRAM = 53993
     MGTDRAM_PULL_DATA = 53991
     SLOWMON = 53666
@@ -108,7 +111,6 @@ class SENSE(AutoIntEnum):
     FALLING=    0
     RISING=     1
 
-
 class GPG_MODE(AutoIntEnum):
     ONCE=       0
     LOOP=       2
@@ -128,6 +130,19 @@ class COUNTERS(AutoIntEnum):
     S4=     4
     S5=     5
     S6=     6
+
+class AWG_SOURCE(AutoIntEnum):
+    DC=    0
+    AWG=   1
+
+class AWG_MODE(AutoIntEnum):
+    ONCE=       PORTS.AWG_ONCE
+    REARM=      PORTS.AWG_AUTOREARM
+    CONTINUOUS= PORTS.AWG_CONTINUOUS
+
+class AWG_SEG_MODE(AutoIntEnum):
+    REARM=      PORTS.AWG_SEGMENT_LOAD_ONESHOT
+    CONTINUOUS= PORTS.AWG_SEGMENT_LOAD_CONTINUOUS
 
 class COLORS:
     RESET = '\033[0m'
