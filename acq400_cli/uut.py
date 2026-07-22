@@ -443,6 +443,21 @@ class Carrier:
         )
         return {chan: dict(zip(keys, row)) for chan, row in enumerate(rows, start_chan)}
 
+    @property
+    def is_awg_idle(self):
+        """Return True if AWG IDLE else False"""
+        if not self.ao_master: return False
+        if self.ao_master.task_active == '1': return False
+        return True
+
+    @property
+    def max_awg_seg(self):
+        """Return max AWG seg int"""
+        if not self.ao_master: return None
+        max_seg = self.ao_master.awg_max_seg
+        if max_seg.isdecimal(): return int(max_seg)
+        return ord(max_seg) - ord('A')
+
     # Normal methods
 
     def abort_capture(self):
