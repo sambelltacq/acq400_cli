@@ -271,8 +271,50 @@ acq400_cli plot_datafile --pcfg=my_plot.pcfg2 <datafiles>
 | **legend** | `true` | Show legend on the row `true`/`false`|
 | **drawstyle** | `default` | draw style (`default`, `steps`, `steps-pre`, `steps-mid`, `steps-post`). |
 | **linestyle** | `-` | line style (`-`, `--`, `:`, `-.`). |
+| **color** | — | Trace color, or omit to use the default color cycle. |
+
 
 ### Waveform Configuration File (.wcfg)
 ### Datafiles (.data, .chan)
 ### Test Configuration File (.tcfg)
 
+### Datafile formats
+
+Datafile format is encoded in the filename as dot-separated parts:
+
+```text
+hostname.timestamp.format.sequence.dat
+```
+
+| Part | Required | Example | Description |
+|------|----------|---------|-------------|
+| **hostname** | no | `acq2106_054` | UUT name (`ACQ…` / `Z7IO…` / `KMCUZ…`) |
+| **timestamp** | no | `26-06-19_15-21-41` | Capture time (`yy-mm-dd_HH-MM-SS`) |
+| **format** | **yes** | `32CHx2B+8SPD` | Sample format tag |
+| **sequence** | no | `001` | File sequence number |
+
+Examples:
+
+```text
+acq2106_054.32CHx2B+8SPD.dat
+acq2106_054.26-06-19_15-21-41.96CHx2B+8SPD.001.dat
+acq2206_077.24CHx4B.dat
+```
+
+#### Format tag
+
+The format tag describes sample format.
+
+| Segment | Meaning | Bytes / channel | dtype |
+|---------|---------|-----------------|-------|
+| **`NCHxSB`** | `N` ADC channels, `S` bytes each | `S` (`2` or `4`) | `int16` (`2B`) / `int32` (`4B`) |
+| **`NDIO`** | `N` DIO channels | `4` | `uint32` |
+| **`NSPD`** | `N` SPAD words | `4` | `uint32` |
+
+| Example tag | Layout | Sample size |
+|-------------|--------|-------------|
+| `32CHx2B` | 32 × 16-bit ADC | 64 B |
+| `16CHx4B` | 16 × 32-bit ADC | 64 B |
+| `32CHx2B+8SPD` | 32 × 16-bit ADC + 8 SPAD | 64 + 32 = 96 B |
+| `96CHx2B+8SPD` | 96 × 16-bit ADC + 8 SPAD | 192 + 32 = 224 B |
+| `16CHx2B+8DIO+8SPD` | 16 ADC + 8 DIO + 8 SPAD | 32 + 32 + 32 = 96 B |
