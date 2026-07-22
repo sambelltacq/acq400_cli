@@ -825,6 +825,34 @@ class Carrier:
 
         if sites or spad: self.run0(sites, spad)
 
+    def configure_playback(
+        self,
+        trigger='0,0,0',
+        rgm='0,0,0',
+        source='AWG',
+        clock='0,0,0',
+        clock_div=None,
+        burstlen=0,
+        ):
+        """Configures uut for playback"""
+        if not self.ao_master: return
+
+        self.ao_master.trg = trigger
+        if hasattr(trigger, 'source') and trigger.source: self.set_trigger_source(trigger.source)
+        auto_soft_trigger = 1 if getattr(trigger, 'source', None) == 'AUTO' else 0
+        self.s0.TRANSIENT__SOFT_TRIGGER = auto_soft_trigger
+
+        if self.ao_master.knob_exists('rgm'): 
+            self.ao_master.rgm = rgm
+
+        self.ao_master.AWG__DIST = AWG_SOURCE(source)
+
+        self.ao_master.clk = clock
+
+        if clock_div: self.ao_master.clkdiv = clkdiv
+
+        self.ao_master.AWG__BURSTLEN = burstlen
+
     def ident_spad(self, enable=True):
         for id in ['1', '2', '3', '4' , '5', '6', '7']:
             if not enable: id = '0'
