@@ -992,7 +992,7 @@ class Carrier:
 
         if isinstance(stl, str):
             logging.debug(f"{self.addr} reading file {stl}")
-            stl_name = stl
+            stl_name = Path(stl).name
             with open(stl, 'r') as fp:
                 stl = []
                 for line in fp.readlines():
