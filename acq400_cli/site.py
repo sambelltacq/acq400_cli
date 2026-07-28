@@ -192,7 +192,7 @@ class Site:
 
         input_range = 10
         PART_NUM = self.PART_NUM
-        match = re.search('([.\d]+)V', PART_NUM)
+        match = re.search(r'([.\d]+)V', PART_NUM)
 
         if match: input_range = int((match.group(1)))
         if PART_NUM.find('2V5') >= 0: input_range = 2.5
