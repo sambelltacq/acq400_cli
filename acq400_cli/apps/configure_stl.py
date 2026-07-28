@@ -12,8 +12,10 @@ def main(args):
     uuts.configure_gpg(
         stl=args.stl, 
         mode=args.mode,
+        timescaler=args.timescaler,
         trigger=args.trigger,
         clock=args.clock,
+        bit=args.bit
     )
 
 def get_parser():
@@ -24,6 +26,7 @@ def get_parser():
     parser.add_argument('--timescaler', '--ts', default=1, type=int, help="GPG timescaler")
     parser.add_argument('--trigger', '--trg', default=None, type=ArgTypes.signal_triplet, help='gpg trg triplet')
     parser.add_argument('--clock', '--clk', default=None, type=ArgTypes.signal_triplet, help='gpg clk triplet')
+    parser.add_argument('--bit', default=0, type=int, help='gpg target bit')
 
     parser.add_argument('uutnames', nargs='+', help="uut hostnames")
     return parser

@@ -964,7 +964,7 @@ class Carrier:
                 parts.append(block)
         return b"".join(parts).decode()
 
-    def configure_gpg(self, stl, mode, timescaler=1, trigger=None, clock=None, stl_name=None):
+    def configure_gpg(self, stl, mode, timescaler=1, trigger=None, clock=None, stl_name=None, bit=0):
         """Configure GPG for output"""
         if not self.has_gpg: raise GPGNotAvailableError(f"{self.addr} GPG not available (enable package)")
 
@@ -985,8 +985,10 @@ class Carrier:
             self.s0.GPG_CLK__DX = clock.line
             self.s0.GPG_CLK__SENSE = clock.sense
 
-        self.s0.SIG__EVENT_SRC__1 = 'GPG'
-        self.s0.SIG__FP__GPIO = 'EVT1'
+
+
+        setattr(self.s0, f"SIG__EVENT_SRC__{bit}", 'GPG')
+        self.s0.SIG__FP__GPIO = f'EVT{bit}'
 
         if isinstance(stl, str):
             logging.debug(f"{self.addr} reading file {stl}")
@@ -1003,7 +1005,7 @@ class Carrier:
             stl.append("EOF")
 
         last_err = None
-        for attempt in range(1, 33):
+        for attempt in range(1, 3):
             try:
                 with socket.socket() as sock:
                     sock.connect((self.addr, PORTS.GPGSTL))
