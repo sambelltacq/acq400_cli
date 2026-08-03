@@ -205,8 +205,10 @@ class Carrier:
 
     @property
     def es_width(self):
-        #TODO: try epics?
-        return 1
+        es_size = 32
+        if self.ai_master.model.upper().startswith('ACQ48'): es_size = 16
+        sample_size = self.ai_master.nchan * self.ai_master.data_size
+        return (es_size + sample_size - 1) // sample_size
 
     @property
     def total_transient_samples(self):
