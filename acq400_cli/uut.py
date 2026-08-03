@@ -1158,6 +1158,15 @@ class Carrier:
 
         logging.info(f"{self.hostname} AWG stream finish")
 
+    def set_event_signaure(self, value):
+        """Enable or Disable event signaure insertion"""
+        try:
+            self.ai_master.ES_ENABLE = int(value)
+        except:
+            self.ai_master.es_enable = int(value)
+            # Avoid race condition on lowercase knob
+            time.sleep(1)
+        
     def upload_to_port(self, port, buffer, repeat=0):
         """Upload bytes to port"""
         with socket.socket() as sock:

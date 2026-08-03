@@ -8,11 +8,12 @@ from acq400_cli import ArgTypes, ArgParser, Collection
 
 def main(args):
     uuts = Collection(args.uutnames)
-
+    
     print(f"Configuring sites")
     uuts.run0(args.sites, args.spad)
     uuts.ident_spad(args.ident)
     uuts.set_spad1_count(args.us)
+    uuts.set_event_signaure(args.no_es)
 
     for uutname, sample_format in uuts.stream_sample_format.items():
         print(f"  {uutname} Sample {sample_format.tag} {sample_format.bytes} Bytes")
@@ -24,6 +25,7 @@ def get_parser():
     parser.add_argument('--sites', default=None, help='run0 sites (1,2,3 or ALL)')
     parser.add_argument('--ident', action='store_true', help='Ident SPAD')
     parser.add_argument('--us', action='store_true', help='Insert microseconds into SPAD[1]')
+    parser.add_argument('--no_es', action='store_false', help='Disable the event signature')
     
     parser.add_argument('uutnames', nargs='+', help="uut hostnames")
     return parser
