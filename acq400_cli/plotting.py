@@ -53,7 +53,7 @@ class FigSpec:
 
             bitmask=ArgTypes.hexstring(spec['bitmask']) if spec.get("bitmask", None) else None,
             bitslice=ArgTypes.hexstring(spec['bitslice']) if spec.get("bitslice", None) else None,
-            mask=ArgTypes.sample_indexes(spec['mask']) if spec.get("mask", None) else None,
+            mask=ArgTypes.list_of_ints_or_ranges(spec['mask']) if spec.get("mask", None) else None,
 
             title=spec.get("title", None),
             label=spec.get("label", None),
@@ -165,6 +165,16 @@ class Plotter:
         """Show built plot"""
         plt.show()
 
+    def save_to_file(self, filepath):
+        """Save figures to filepath (multi-figure adds .<n> before suffix)"""
+        filepath = Path(filepath)
+        filepath.parent.mkdir(parents=True, exist_ok=True)
+        for figure, (fig, _) in sorted(self.figs.items()):
+            out = filepath if len(self.figs) == 1 else filepath.with_name(f"{filepath.stem}.{figure}{filepath.suffix}")
+            logging.info(f"Saving figure[{figure}] to {out}")
+            fig.savefig(out, bbox_inches='tight')
+        return filepath
+
     def __calc_max_rows(self, specs):
         """Read specs and calc max rows foreach figure"""
         max_rows = {}
@@ -182,16 +192,9 @@ class Plotter:
             return pses
         return (start, start + max_samples * stride, stride)
 
-    def __calc_range(self, length):
-        """Calc range from pses and length"""
-        start, end, stride = self.pses
-        plot_start = max(0, min(start, length))
-        plot_end = length if end is None or end < 0 else end
-        plot_end = max(plot_start, min(plot_end, length))
-        return np.arange(plot_start, plot_end, stride)
-
     def __gen_timebase(self, units, sources):
         """Generate timebase for sources"""
+        print(units)
         timebase = []
         if units == 'SECONDS':
             if not self.sample_rate and all(source.sample_rate is None for source in sources):
