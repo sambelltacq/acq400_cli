@@ -41,6 +41,8 @@ class ArgTypes:
     @staticmethod
     def int_with_unit(value):
         """Converts values with units to intergers"""
+        if isinstance(value, (int, float)): return int(value)
+
         units = {
             "k": 1e3,
             "M": 1e6,
@@ -153,13 +155,16 @@ class ArgTypes:
         return str(path)
 
     @staticmethod
-    def sample_indexes(arg):
+    def list_of_ints_or_ranges(arg):
+        if not isinstance(arg, str): return arg
         indexes = []
         for index in arg.split(','):
-            if ':' in index:
+            if index.upper() == 'ALL':
+                indexes.append('ALL')
+            elif ':' in index:
                 indexes.append(ArgTypes.start_end_stride(index))
             else:
-                indexes.append(int(index))
+                indexes.append(ArgTypes.int_with_unit(index))
         return indexes
 
 class ArgParser(argparse.ArgumentParser):
