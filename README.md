@@ -317,11 +317,44 @@ acq400_cli plot_datafile --pcfg=my_plot.pcfg2 <datafiles>
 | **color** | — | Trace color, or omit to use the default color cycle. |
 
 
-### Waveform Configuration File (.wcfg)
-### Datafiles (.data, .chan)
-### Test Configuration File (.tcfg)
+### Waveform Definition File (.wdef)
 
-### Datafile formats
+A `.wdef` file defines waveforms for `generate_waveform`.
+
+Each line defines **one waveform placement**. Options are separated by **semicolons** (`;`) as `key=value` pairs
+
+
+```bash
+acq400_cli generate_waveform --wavedef=my_wave.wdef --nchan=32 --length=3125 --data_size=2
+```
+
+**Example**
+
+```text
+# full-scale sine of 3125 samples on all channels
+chan=0;wavelength=3125;shape=SINE
+```
+
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| **chan** | `0` | Channels to write. `0` / `ALL` = all channels, or comma list and/or `start:end:stride` ranges. |
+| **index** | `0` | Sample index where the waveform is anchored. Comma list and/or `start:end:stride` ranges. |
+| **wavelength** | `5000` | Samples per cycle. Accepts units (`50K`). |
+| **cycles** | `1` | Number of cycles. `-1` fills from `index` to the end of the buffer. |
+| **truncate** | `0` | Max samples to keep from the generated waveform (`0` = no truncate). |
+| **skip** | `0` | Samples to drop from the start of the generated waveform. |
+| **sense** | `RISING` | `RISING` — waveform starts at `index`; `FALLING` — waveform ends at `index`. |
+| **phase_offset** | `0` | Phase offset in **radians** (e.g. `3.14159` for invert). |
+| **dc_offset** | `0` | Vertical offset as a fraction of full scale (applied only to the segment). |
+| **shape** | `SINE` | Waveform type: `SINE`, `SQUARE`, `RAMP`, or `DC` (flat fill from `index` to end at `dc_offset`). |
+| **scale** | `1` | Amplitude as a fraction of full scale for the channel data size (`1` = full scale). |
+
+
+### Test Configuration File (.tcfg)
+##TODO
+
+### Datafile formats (.data, .chan)
 
 Datafile format is encoded in the filename as dot-separated parts:
 
