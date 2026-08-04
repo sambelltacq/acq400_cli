@@ -116,6 +116,49 @@ acq400_cli configure_capture --stream_mask=1-4 --trigger=EXT,RISING <uutnames>
 acq400_cli configure_capture --rgm=RTM,RISING --translen=5000 --trigger=SOFT,RISING <uutnames>
 ```
 
+### Configure STL
+
+Configure GPG from an STL file
+
+- **Once** - Load STL and run once:
+```bash
+acq400_cli configure_stl --stl=sos0.stl <uutnames>
+```
+
+- **Loop** - Load STL and loop:
+```bash
+acq400_cli configure_stl --stl=sos0.stl --mode=LOOP <uutnames>
+```
+
+- **Timescaler** - Load STL with timescaler:
+```bash
+acq400_cli configure_stl --stl=sos0.stl --timescaler=10 <uutnames>
+```
+
+- **Trigger** - Load STL with GPG trigger:
+```bash
+acq400_cli configure_stl --stl=sos0.stl --trigger=EXT,RISING <uutnames>
+```
+
+- **Clock** - Load STL with GPG clock:
+```bash
+acq400_cli configure_stl --stl=sos0.stl --clock=EXT,RISING <uutnames>
+```
+
+- **Bit** - Load STL targeting GPG bit:
+```bash
+acq400_cli configure_stl --stl=sos0.stl --bit=0 <uutnames>
+```
+
+| Arg | Default | Description |
+|-----|---------|-------------|
+| **--stl** | — | STL file (required) |
+| **--mode** | `ONCE` | GPG mode: `ONCE`, `LOOP`, `LOOPWAIT` |
+| **--timescaler**, **--ts** | `1` | GPG timescaler |
+| **--trigger**, **--trg** | — | GPG trigger triplet (`SOURCE,SENSE` or `enable,line,sense`) |
+| **--clock**, **--clk** | — | GPG clock triplet (`SOURCE,SENSE` or `enable,line,sense`) |
+| **--bit** | `0` | GPG target bit |
+
 ### Plot Datafile
 
 Plot a datafile from disk
