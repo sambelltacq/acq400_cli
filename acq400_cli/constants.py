@@ -180,6 +180,10 @@ PLOT_TRACE_COLORS = (
     '#f38484',
 )
 
-#http://eigg:8090/mediawiki/index.php/Products:ACQ400:ACQ400_Data_Format
-class EventSignature:
-    pass
+
+class WAVE_FUNC(AutoIntEnum):
+    SINE=   0
+    RAMP=   1
+    SQUARE= 2
+    DC=     3
+

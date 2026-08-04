@@ -1,0 +1,2 @@
+# An example of all available parameters
+index=0::5000;chans=1:8;wavelength=2000;cycles=1;truncate=0;skip=0;sense=RISING;phase_offset=0;dc_offset=0;shape=SINE;scale=1
