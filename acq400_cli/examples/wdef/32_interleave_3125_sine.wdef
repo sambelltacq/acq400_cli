@@ -1,0 +1,2 @@
+# acq400_cli generate_waveform --wavedef acq400_cli/examples/wdef/32_interleave_3125_sine.wdef --nchan=32 --length=3125 --data_size=2
+chan=0;wavelength=3125;shape=SINE
