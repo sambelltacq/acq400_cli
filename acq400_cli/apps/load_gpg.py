@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Configure STL on UUTs
+Load GPG STL into UUTs
 """
 
 from acq400_cli import ArgTypes, ArgParser, Collection
@@ -19,7 +19,7 @@ def main(args):
     )
 
 def get_parser():
-    parser = ArgParser(description='Configure STL on UUTs')
+    parser = ArgParser(description='Load GPG STL into UUTs')
 
     parser.add_argument('--stl', type=str, required=True, help='stl file')
     parser.add_argument('--mode', default='ONCE', choices=ArgTypes.gpg_mode, type=str.upper, help='GPG mode')
