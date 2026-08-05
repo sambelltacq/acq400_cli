@@ -25,7 +25,7 @@ def main(args):
         spad=args.spad,
     )
 
-    if args.trigger_source: uuts.set_trigger_source(args.trigger_source, validate=False)
+    if args.trigger_source: uuts.set_line_source(args.trigger_source, validate=False)
 
     print(f"Capture Configured {uuts.names}")
 

@@ -709,8 +709,8 @@ class Carrier:
         counter = COUNTERS(line).name
         return int(getattr(self.s0, f"SIG__{signal}_{counter}__COUNT"))
 
-    def set_trigger_source(self, source, validate=True):
-        """Config sync trigger source in for master UUT"""
+    def set_line_source(self, source, validate=True):
+        """Config sync line source in for master UUT"""
         
         if not self.is_master: return
 
@@ -748,7 +748,7 @@ class Carrier:
             logging.warning(f"Auto Soft Trigger - Changing trigger to AUTO")
             self.s0.SIG__SRC__TRG__1 = "NONE"
 
-    def trigger_capture(self, siggen=None, line=0):
+    def trigger_line(self, siggen=None, line=0):
         """Trigger capture based on UUT signal config"""
 
         if not self.is_master: return
@@ -820,10 +820,10 @@ class Carrier:
         self.s0.transient = f"PRE={int(pre)} POST={int(post)} SOFT_TRIGGER={auto_soft_trigger} DEMUX={demux}"
 
         self.ai_master.trg = trigger
-        if hasattr(trigger, 'source') and trigger.source: self.set_trigger_source(trigger.source)
+        if hasattr(trigger, 'source') and trigger.source: self.set_line_source(trigger.source)
 
         self.ai_master.event0 = event0
-        if hasattr(event0, 'source') and event0.source: self.set_trigger_source(event0.source)
+        if hasattr(event0, 'source') and event0.source: self.set_line_source(event0.source)
         
         self.ai_master.event1 = event1
 
@@ -855,7 +855,7 @@ class Carrier:
         if not self.ao_master: return
 
         self.ao_master.trg = trigger
-        if hasattr(trigger, 'source') and trigger.source: self.set_trigger_source(trigger.source)
+        if hasattr(trigger, 'source') and trigger.source: self.set_line_source(trigger.source)
         auto_soft_trigger = 1 if getattr(trigger, 'source', None) == 'AUTO' else 0
         self.s0.TRANSIENT__SOFT_TRIGGER = auto_soft_trigger
 
@@ -1042,7 +1042,7 @@ class Carrier:
 
 
     def run_service(self, port, eof="EOF", service_name=None):
-        """Run a service on the uut, return transcript lines until eof"""
+        """Run a service on the uut"""
 
         if not service_name:
             if port in PORTS:
@@ -1190,7 +1190,7 @@ class Collection(list):
 
     def __init__(self, uutnames):
         self.uuts = {uutname: Carrier(uutname) for uutname in uutnames}
-        self.extend(sorted(self.uuts.values()))
+        self.extend(self.uuts[name] for name in sorted(self.uuts))
         self._proxy = FanoutProxy(self.uuts)
         self.names = ' '.join(sorted(self.uuts.keys()))
 
@@ -1239,7 +1239,7 @@ class Collection(list):
         print("Waiting for ARM")
         self._proxy.wait_for_arm(timeout)
         print("Armed")
-        self._proxy.trigger_capture(siggen)
+        self._proxy.trigger_line(siggen)
 
     @background_task
     def print_status(self):

@@ -45,7 +45,7 @@ def main(args):
 
     stream.print_status()
 
-    uuts.trigger_capture(siggen=args.siggen, line=args.trigger.line)
+    uuts.trigger_line(siggen=args.siggen, line=args.trigger.line)
 
     uuts.wait_for_idle()
 

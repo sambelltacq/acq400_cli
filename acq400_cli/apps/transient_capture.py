@@ -30,12 +30,12 @@ def main(args):
     uuts.wait_for_arm()
     print('Armed')
 
-    uuts.trigger_capture(args.siggen, args.trigger.line)
+    uuts.trigger_line(args.siggen, args.trigger.line)
 
     if args.pre > 0:
         print(f"Wait for {args.pre} samples")
         uuts.wait_for_nsamples(args.pre)
-        uuts.trigger_capture(args.siggen, args.event0.line)
+        uuts.trigger_line(args.siggen, args.event0.line)
 
     uuts.wait_for_idle()
     print("Complete")
