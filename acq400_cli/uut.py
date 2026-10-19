@@ -1310,6 +1310,7 @@ class Collection(list):
         self.extend(self.uuts[name] for name in sorted(self.uuts))
         self._proxy = FanoutProxy(self.uuts)
         self.names = ' '.join(sorted(self.uuts.keys()))
+        self.tree = None
 
     def __getitem__(self, key):
         if isinstance(key, (int, slice)):
@@ -1328,27 +1329,56 @@ class Collection(list):
             lines.append(f"- {uutname}")
         return '\n'.join(lines)
 
-    #Normal methods
+    def get_uut_hierarchy(self, HDMI=False):
+        """Get UUT hierarchy from sync_role (fast, imprecise) or HDMI (slow, precise)"""
+        if HDMI: 
+            self.tree = CarrierTree(list(self))
+            return self.tree.partition(depth=0)
+        roles = self._proxy.is_master
+        masters = [name for name, is_master in roles.items() if is_master]
+        slaves  = [name for name, is_master in roles.items() if not is_master]
+        return masters, slaves
+        
+    @property
+    def masters(self):
+        """Return proxy for master UUTs"""
+        if hasattr(self, '_masters'): return self._masters
+        masters, slaves = self.get_uut_hierarchy()
+        self._masters = FanoutProxy({uutname: self[uutname] for uutname in masters})
+        self._slaves = FanoutProxy({uutname: self[uutname] for uutname in slaves})
+        return self._masters
 
-    def set_sync_role(self, clk, master_role='master', slave_role="slave"):
-        """set sync role"""
-        #TODO: handle TRG:DX and TRG:SENSE
-        #TODO: handle CLK:DX and CLK:SENSE
-        #TODO: handle CLKDIV
+    @property
+    def slaves(self):
+        """Return proxy for slave UUTs"""
+        if hasattr(self, '_slaves'): return self._slaves
+        masters, slaves = self.get_uut_hierarchy()
+        self._masters = FanoutProxy({uutname: self[uutname] for uutname in masters})
+        self._slaves = FanoutProxy({uutname: self[uutname] for uutname in slaves})
+        return self._slaves
+
+    def set_sync_role(self, clk, master_role='master', slave_role='slave'):
+        """Detect UUT HDMI chain if present and sync_role"""
+        masters, slaves = self.get_uut_hierarchy(True)
+        self._masters = FanoutProxy({uutname: self[uutname] for uutname in masters})
+        self._slaves = FanoutProxy({uutname: self[uutname] for uutname in slaves})
 
         master_params = f"{master_role} {clk}"
         slave_params = f"{slave_role} {clk}"
-        logging.debug(f"Master sync role {master_params}")
-        logging.debug(f"Slave sync role {slave_params}")
+        
+        master_task = self.masters.bg.s0.set('sync_role', master_params)
+        slave_task = self.slaves.bg.s0.set('sync_role', slave_params)
 
-        self.masters.disable_blocking()
-        self.masters.s0.sync_role = master_params
+        """
+        TODO: after sync_role changes are complete
+        - New args: clkdiv=None, ai_clock=None, ai_clkdiv=None, ao_clock=None, ao_clkdiv=None
+        - Handle mixed chains (ai boxes and ao boxes)
+        - Handle mixed systems (ai and ao modules) (pass-through divided clock or not) (different clkdivs)
+        - Better HDMI chain detection
+        """
 
-        self.slaves.disable_blocking()
-        self.slaves.s0.sync_role = slave_params
-
-        self.masters.wait_for_complete()
-        self.slaves.wait_for_complete()
+        for uutname, task in master_task.items(): task.join()
+        for uutname, task in slave_task.items(): task.join()
 
     @background_task
     def trigger_when_armed(self, siggen=None, timeout=30):
@@ -1370,35 +1400,6 @@ class Collection(list):
                     print(f"> {uutname} {COLORS.format(COLORS.get(state), state)}")
                     states[uutname] = state
             time.sleep(0.5)
-
-    # Attribute methods
-
-    @property
-    def tree(self):
-        """Calculate the collection Tree"""
-        if hasattr(self, '_tree'): return self._tree
-        self._tree = CarrierTree(list(self))
-        return self._tree
-
-    @property
-    def masters(self):
-        """Proxy for master uuts"""
-        if hasattr(self, '_masters'): return self._masters
-        masters, slaves = self.tree.partition(depth=0)
-        self._masters = FanoutProxy({uutname: self[uutname] for uutname in masters})
-        self._slaves = FanoutProxy({uutname: self[uutname] for uutname in slaves})
-        return self._masters
-
-    @property
-    def slaves(self):
-        """Proxy for slave uuts"""
-        if hasattr(self, '_slaves'): return self._slaves
-        masters, slaves = self.tree.partition(depth=0)
-        self._masters = FanoutProxy({uutname: self[uutname] for uutname in masters})
-        self._slaves = FanoutProxy({uutname: self[uutname] for uutname in slaves})
-        return self._slaves
-    
-
 
 def factory(*uutnames):
     """Init UUTs"""

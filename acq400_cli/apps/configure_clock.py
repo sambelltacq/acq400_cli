@@ -20,11 +20,11 @@ def main(args):
     
     for ii, (uutname, uut) in enumerate(uuts.masters.items()):
         if ii == 0: print('[ Masters ]')
-        print(f"- {uutname} '{uut.s0.sync_role}' {uut.data_rate} MB/s")
+        print(f"- {uutname} '{uut.s0.sync_role}'")
 
     for ii, (uutname, uut) in enumerate(uuts.slaves.items()):
         if ii == 0: print('[ Slaves ]')
-        print(f"- {uutname} '{uut.s0.sync_role}' {uut.data_rate} MB/s")
+        print(f"- {uutname} '{uut.s0.sync_role}'")
 
     print('[ Tree ]')
     print(uuts.tree)
