@@ -1380,27 +1380,6 @@ class Collection(list):
         for uutname, task in master_task.items(): task.join()
         for uutname, task in slave_task.items(): task.join()
 
-    @background_task
-    def trigger_when_armed(self, siggen=None, timeout=30):
-        """Trigger capture when all UUTs are ARMED"""
-        print("Waiting for ARM")
-        self._proxy.wait_for_arm(timeout)
-        print("Armed")
-        self._proxy.trigger_line(siggen)
-
-    @background_task
-    def print_status(self):
-        """Print UUTs status untill complete"""
-        states = {}
-        while True:
-
-            for uutname, uut in sorted(self.uuts.items()):
-                state = uut.capture_state.name
-                if state != states.get(uutname, None):
-                    print(f"> {uutname} {COLORS.format(COLORS.get(state), state)}")
-                    states[uutname] = state
-            time.sleep(0.5)
-
 def factory(*uutnames):
     """Init UUTs"""
     return Collection(uutnames)
