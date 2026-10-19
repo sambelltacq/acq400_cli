@@ -37,27 +37,29 @@ class HDMI:
             (int(uut.s0.SIG__SYNC_BUS__IN__SYNC == 'ON') << 1) |
             (int(uut.s0.SIG__SYNC_BUS__IN__GPIO == 'ON') << 0)
         )
-
-
-class CarrierTree(HDMI, dict):
-    """Create HDMI connections map; the instance is the root hostname -> subtree dict."""
+class CarrierTree:
+    """Create HDMI connections map"""
 
     def __init__(self, uuts):
-        super().__init__()
+        self.connections = {}
+        if len(uuts) == 1:
+            self.connections[uuts[0].hostname] = {}
+            self.tree = self.__dict_to_tree(self.connections)
+            return
+
         logging.debug("Detecting HDMI connections")
 
         uutnames = [uut.hostname for uut in uuts]
         uut_state = run_on_all_uuts(self.__save_and_setup_trg)(uuts)
-        time.sleep(1)
         try:
             self.__pulse_triggers(uuts)
-            time.sleep(2)
+            time.sleep(1)
             counts = run_on_all_uuts(self.__get_trg_count)(uuts)
             parents = self.__find_parents(uutnames, counts)
             for device, parent in parents.items():
                 if parent is None:
-                    self[device] = self.__build_tree(device, parents)
-            self.tree = self.__dict_to_tree(self)
+                    self.connections[device] = self.__build_tree(device, parents)
+            self.tree = self.__dict_to_tree(self.connections)
         finally:
             run_on_all_uuts(self.__restore_trigger_state)(uuts, uut_state)
 
@@ -71,11 +73,12 @@ class CarrierTree(HDMI, dict):
             'prev_trg_out': uut.s0.SIG__SYNC_OUT__TRG,
             'prev_trg_out_dx': uut.s0.SIG__SYNC_OUT__TRG__DX,
         }
-        uut.s0.SIG__SRC__TRG__0 = 1
-        uut.s0.SIG__SRC__TRG__1 = 0
-        uut.s0.SIG__SYNC_OUT__TRG = 2
-        uut.s0.SIG__SYNC_OUT__TRG__DX = 1
-        uut.s0.SIG__TRG_EXT__RESET = 1
+        uut.s0.SIG__SRC__TRG__0 = 1 #sets d0 trigger to use HDMI
+        uut.s0.SIG__SRC__TRG__1 = 0 # sets d1 trigegr to use sort trigger
+        uut.s0.SIG__SYNC_OUT__TRG = 2 # sets trg out to direct out put
+        uut.s0.SIG__SYNC_OUT__TRG__DX = 1 #set trg out to d1
+        uut.s0.SIG__TRG_EXT__RESET = 1 # reset count 
+        time.sleep(0.5)
         return state
 
     def __restore_trigger_state(self, uut, uut_state):
@@ -144,7 +147,7 @@ class CarrierTree(HDMI, dict):
                     yield from walk(subtree, level + 1)
 
         above, below = [], []
-        for hostname, level in walk(self):
+        for hostname, level in walk(self.connections):
             if level == depth:
                 above.append(hostname)
             elif level > depth:
