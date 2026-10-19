@@ -708,7 +708,7 @@ class Carrier:
                 else:
                     destination += f" (x{nfiles})"
 
-        logging.info(f"{self.hostname} Finished {total_bytes >> 20}MB ({total_bytes // sample_bytes} Samples) streamed to {destination}")
+        logging.info(f"{self.hostname} Finished {total_bytes - trim >> 20}MB ({total_bytes // sample_bytes} Samples) streamed to {destination}")
         if missed > 0: logging.warning(f"{self.hostname} Stream {missed} missing samples")
 
         return savepath
