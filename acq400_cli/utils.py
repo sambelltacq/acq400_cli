@@ -314,3 +314,15 @@ def run_on_all_uuts(func):
         return {uutname: thread.value for uutname, thread in threads.items()}
 
     return object_wrapper if is_method else wrapper
+
+def require_ai_master(fn):
+    def wrapper(self, *args, **kwargs):
+        if not self.ai_master: return None
+        return fn(self, *args, **kwargs)
+    return wrapper
+
+def require_ao_master(fn):
+    def wrapper(self, *args, **kwargs):
+        if not self.ao_master: return None
+        return fn(self, *args, **kwargs)
+    return wrapper
