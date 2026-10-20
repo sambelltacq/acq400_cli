@@ -53,7 +53,7 @@ def print_apps():
     for _, app_name, _ in sorted(pkgutil.iter_modules(apps.__path__)):
         if len(app_name) > name_max: name_max = len(app_name)
         app = importlib.import_module(f"{APPS_PATH}.{app_name}")
-        desc = app.__doc__.strip().split('\n')[0]
+        desc = app.__doc__.strip().split('\n')[0] if app.__doc__ else 'No Description'
         app_descs.append((app_name, desc))
 
     print("apps:")
