@@ -285,20 +285,25 @@ class Carrier:
     @property
     def sample_rate(self):
         """return the sample rate"""
-        if self.ai_master.model.upper().startswith('ACQ48'):
-            clk = self.ai_master.ACQ480__OSR
-            return round(float(clk), -3)
-        elif self.ai_master.model.upper().startswith('ACQ43'):
-            clk = self.ai_master.ACQ43X_SAMPLE_RATE
-            return round(float(clk), -3)
-        else:
-            if self.ai_master: set_clk = int(self.s0.SIG__CLK_MB__SET) / int(self.ai_master.CLKDIV)
-            if self.ao_master: set_clk = int(self.s0.SIG__CLK_MB__SET) / int(self.ao_master.CLKDIV)
-            live_clk = float(self.s0.SIG__CLK_S1__FREQ)
-            if abs(live_clk - set_clk) > 0.01 * abs(set_clk):
-                logging.warning(f"{self.hostname} Using Live clock ({live_clk:.0f} vs SET {set_clk:.0f})")
-                return round(float(live_clk), -3)
-            return set_clk
+        if self.ai_master:
+            if self.ai_master.model.upper().startswith('ACQ48'):
+                clk = self.ai_master.ACQ480__OSR
+                return round(float(clk), -3)
+            elif self.ai_master.model.upper().startswith('ACQ43'):
+                clk = self.ai_master.ACQ43X_SAMPLE_RATE
+                return round(float(clk), -3)
+
+            set_clock = int(self.s0.SIG__CLK_MB__SET) / int(self.ai_master.CLKDIV)
+            live_clock = self.ai_master.live_clock
+            
+        if self.ao_master: 
+            set_clock = int(self.s0.SIG__CLK_MB__SET) / int(self.ao_master.CLKDIV)
+            live_clock = self.ao_master.live_clock
+
+        if abs(live_clock - set_clock) > 0.01 * abs(set_clock):
+            logging.warning(f"{self.hostname} Using Live clock ({live_clock:.0f} vs SET {set_clock:.0f})")
+            return round(float(live_clock), -3)
+        return set_clock
 
     @cached_property
     def calibration(self):
