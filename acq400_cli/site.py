@@ -264,6 +264,11 @@ class Site:
         return int(self.active_chan)
 
     @property
+    def live_clock(self):
+        """return the module live clock value"""
+        return float(self.carrier.s0.get(f"SIG__CLK_S{self.site}__FREQ"))
+
+    @property
     def spec(self):
 
         if self.is_ai:
