@@ -310,8 +310,8 @@ class Carrier:
         """get calibration from all channels"""
         
         threads = []
-        for num, site in sorted(self.ai_sites.items()):
-            thread = RThread(target=getattr, args=(site, 'calibration'))
+        for site in self.agg_sites:
+            thread = RThread(target=getattr, args=(self[site], 'calibration'))
             thread.start()
             threads.append(thread)
 
@@ -1081,8 +1081,8 @@ class Carrier:
         metadata['sample_rate'] = self.sample_rate
         metadata['calibration'] = self.calibration
         metadata['modules'] = {}
-        for num, site in self.ai_sites.items():
-            metadata['modules'][int(num)] = site.PART_NUM
+        for site in self.agg_sites:
+            metadata['modules'][int(site)] = self[site].PART_NUM
 
         logging.debug(f"Saving metadata to {filepath}")
         with open(filepath, "w", encoding="utf-8") as fp:
