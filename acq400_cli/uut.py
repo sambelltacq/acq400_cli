@@ -360,19 +360,6 @@ class Carrier:
         options = self.s0.stream_subset.split('\n')[-1].strip()
         return not any(arg in options for arg in invalid)
     
-    @property
-    def rgm_enabled(self):
-        return Triplet(self.s1.rgm).enabled == 1
-
-    @property
-    def trigger_line(self):
-        """Return trigger line int"""
-        return int(self.ai_master.TRG__DX.removeprefix('d'))
-
-    @property
-    def event0_line(self):
-        """Return event0 line int"""
-        return int(self.ai_master.EVENT0__DX.removeprefix('d'))
 
     @cached_property
     def fpga(self):
@@ -620,7 +607,7 @@ class Carrier:
             logging.error(f"{self.hostname} Streaming not enabled")
             return
         
-        if not self.rgm_enabled and self.data_rate_masked > MAX_ETH_RATE: 
+        if self.ai_master.rgm.enabled != 1 and self.data_rate_masked > MAX_ETH_RATE: 
             logging.warning(f"{self.hostname} Stream datarate above {MAX_ETH_RATE} MB/s")
 
         if not sample_format:

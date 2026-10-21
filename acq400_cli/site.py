@@ -24,7 +24,7 @@ import logging
 
 from acq400_cli.constants import PORTS
 from acq400_cli.exception import KnobNotFoundError
-from acq400_cli.utils import cached_property
+from acq400_cli.utils import StopWatch, cached_property, Triplet
 
 
 class CommandSocket:
@@ -267,6 +267,21 @@ class Site:
     def live_clock(self):
         """return the module live clock value"""
         return float(self.carrier.s0.get(f"SIG__CLK_S{self.site}__FREQ"))
+
+    @property
+    def trg(self):
+        """Return trigger triplet"""
+        return Triplet(self.get('trg').removeprefix('=').split(' ')[0])
+
+    @property
+    def event0(self):
+        """Return event0 triplet"""
+        return Triplet(self.get('event0').removeprefix('=').split(' ')[0])
+
+    @property
+    def rgm(self):
+        """Return rgm triplet"""
+        return Triplet(self.get('rgm').removeprefix('=').split(' ')[0])
 
     @property
     def spec(self):
