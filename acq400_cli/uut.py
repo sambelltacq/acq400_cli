@@ -16,7 +16,7 @@ from acq400_cli.utils import Ansi, BackgroundTask, Triplet, background_task, cha
 from acq400_cli.constants import *
 from acq400_cli.exception import *
 from acq400_cli.sample import TransientSample, StreamSample
-from acq400_cli.data import UUTData, gen_data_filename
+from acq400_cli.data import Dataset, gen_data_filename
 from acq400_cli.site import Site
 from acq400_cli.hdmi import CarrierTree
 from acq400_cli.clients import StatusMontior
@@ -593,7 +593,7 @@ class Carrier:
         else:
             raw = self.read_from_port(PORTS.DATA0, sample_format.dtype, tsamples)
 
-        data = UUTData.from_uut(raw, sample_format, self.calibration, self.sample_rate, self.hostname)
+        data = Dataset.from_uut(raw, sample_format, self.calibration, self.sample_rate, self.hostname)
 
         logging.info(f"Read {data.length} samples ({data.nbytes / (1024 * 1024):.2f} MB) from {self.hostname}")
         return data
@@ -720,7 +720,7 @@ class Carrier:
                 if cursor >= nbytes: break
                 cursor += n
         raw = np.frombuffer(buffer, dtype=sample_format.dtype, count=nsamples)
-        return UUTData(raw, sample_format)
+        return Dataset(raw, sample_format)
 
     def run0(self, sites=None, spad=None):
         """Run run0"""

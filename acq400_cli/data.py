@@ -14,11 +14,8 @@ import numpy as np
 from acq400_cli.sample import SampleFormatFromTag
 from acq400_cli.utils import DotDict
 
-class Dataset:pass
-
-
-class UUTData(np.ndarray):
-    """Wrapper class for UUT data"""
+class Dataset(np.ndarray):
+    """Wrapper class for channelised sample data"""
 
     def __new__(cls, input_array, sample_format):
 
@@ -35,7 +32,7 @@ class UUTData(np.ndarray):
         return obj
 
     def __str__(self):
-        return f"<UUT Data {len(self)} Samples x {self.sample_format.tag} ({self.sample_format.bytes} Bytes)>"
+        return f"<Dataset {len(self)} Samples x {self.sample_format.tag} ({self.sample_format.bytes} Bytes)>"
     
     @classmethod
     def from_uut(cls, raw, sample_format, calibration, sample_rate, hostname):

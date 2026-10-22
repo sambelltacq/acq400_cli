@@ -5,12 +5,12 @@ Plot datafiles
 """
 
 from acq400_cli import ArgTypes, ArgParser
-from acq400_cli.data import UUTData
+from acq400_cli.data import Dataset
 from acq400_cli.plotting import FigSpec, Plotter, PCFG
 
 def main(args):
 
-    sources = [UUTData.from_file(filename, format=args.format) for filename in args.filenames]
+    sources = [Dataset.from_file(filename, format=args.format) for filename in args.filenames]
     view = 'VOLTS' if args.egu else 'RAW'
     units = 'SECONDS' if args.secs else 'SAMPLES'
 
