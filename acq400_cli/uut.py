@@ -1084,7 +1084,7 @@ class Carrier:
         for site in self.agg_sites:
             metadata['modules'][int(site)] = self[site].PART_NUM
 
-        logging.debug(f"Saving metadata to {filepath}")
+        logging.info(f"Saving metadata to {filepath}")
         with open(filepath, "w", encoding="utf-8") as fp:
             json.dump(metadata, fp, indent=4, ensure_ascii=False)
 
