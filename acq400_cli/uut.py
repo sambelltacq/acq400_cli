@@ -528,7 +528,7 @@ class Carrier:
             t1 = time.time() - t0
             if timeout and t1 > timeout: 
                 raise TimeoutError(f'{self.addr} failed to reach {target_state.name} after {timeout}s stuck in {self.capture_state.name}')
-            time.sleep(1)
+            time.sleep(0.3)
         logging.debug(f"{self.addr} reached {target_state.name}")
 
     def wait_for_nsamples(self, nsamples, timeout=None):
