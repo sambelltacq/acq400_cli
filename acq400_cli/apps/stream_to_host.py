@@ -66,7 +66,6 @@ def main(args):
                 timestamp=timestamp,
                 max_files=args.max_files,
             )
-            uut.save_metadata(datafile.name.with_suffix('.meta'))
 
         stream_tasks[uut.hostname] = uut.bg.stream_to_host(target_bytes, PORTS.STREAM, sample_format, datafile)
 
@@ -91,8 +90,10 @@ def main(args):
 
     for uutname, task in stream_tasks.items():
         savepath = task.join()
-        if args.hexdump and savepath:
-            print(f"{uuts[uutname].stream_sample_format.hexdump} {savepath}")
+        if savepath:
+            uuts[uutname].save_metadata(savepath.with_suffix('.meta'))
+            if args.hexdump:
+                print(f"{uuts[uutname].stream_sample_format.hexdump} {savepath}")
 
 
 def get_parser():
