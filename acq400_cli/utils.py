@@ -165,21 +165,24 @@ class FanoutProxy(dict):
             return results
         return self.__class__(results)
 
-class StopWatch(list):
+class StopWatch:
     """easy delta time between marks"""
-    def __init__(self):
-        """Start timer"""
-        super().__init__([(0, 'START')]) 
-        self.t0 = time.time()
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = object.__new__(cls)
+            cls._instance.t0 = time.time()
+            cls._instance.marks = [(0.0, 'START')]
+        return cls._instance
 
     def mark(self, reason=None):
-        t1 = time.time()
-        if not reason: reason= f"MARK {len(self)}"
-        self.append((t1 - self.t0, reason))
+        if not reason: reason = f"MARK {len(self.marks)}"
+        self.marks.append((time.time() - self.t0, reason))
 
     def __str__(self):
         lines = ['Stopwatch:']
-        for elapsed, reason in self:
+        for elapsed, reason in self.marks:
             lines.append(f"{elapsed:.2f}\t{reason}")
         return '\n'.join(lines)
 
