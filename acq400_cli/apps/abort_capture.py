@@ -18,5 +18,4 @@ def get_parser():
     return parser
 
 if __name__ == '__main__':
-    print('main running?')
     main(get_parser().parse_args())
