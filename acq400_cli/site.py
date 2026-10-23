@@ -56,7 +56,6 @@ class CommandSocket:
         """Send a message and receive a reply"""
         with self.lock:
             message = f"{knob}={value}" if value is not None else knob
-            logging.trace(f"{self.addr}:{self.port} < {message}")
             self.sock.send(f"{message}\n".encode())
             while True:
                 self.buffer += self.sock.recv(maxlen).decode("latin-1")
@@ -68,7 +67,10 @@ class CommandSocket:
                 logging.trace(f"{self.addr}:{self.port} > Error: '{knob}' not found")
                 raise KnobNotFoundError(f"{self.addr}:{self.port} '{knob}' not found")
             rc = rc.removeprefix(knob).lstrip()
-            logging.trace(f"{self.addr}:{self.port} > {repr(rc[:100])}")
+            if value:
+                logging.trace(f"{self.addr}:{self.port} < {knob} < {value}")
+            else:
+                logging.trace(f"{self.addr}:{self.port} > {message} > {repr(rc[:100])}")
             return rc
 
     def get(self, knob): 
