@@ -129,7 +129,7 @@ class SampleFormat:
                 chan_size = as_width
             fmt.append(f'{nchan}/{chan_size} "%0{chan_size * 2}x,"')
         fmt.append(r'"\n"')
-        return f"hexdump -e '{' '.join(fmt)}'"
+        return f"hexdump -e '{' '.join(fmt)}' -s $(({self.bytes} * 0)) $DATAFILE | cut -d, -f1- | head"
 
     def __str__(self):
         return f"<SampleFormat tag='{self.tag}' bytes='{self.bytes}'>"
