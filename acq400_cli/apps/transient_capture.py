@@ -34,6 +34,7 @@ def main(args):
     if args.pre > 0:
         print(f"Wait for {args.pre} samples")
         uuts.wait_for_nsamples(args.pre)
+        print(f"{args.pre} samples captured")
         uuts.trigger_line(args.siggen, args.event0.line)
 
     uuts.wait_for_idle()
