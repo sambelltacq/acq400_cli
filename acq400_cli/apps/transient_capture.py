@@ -58,7 +58,8 @@ def main(args):
         dat.save_to_file(savepath)
         uuts[uutname].save_metadata(savepath.with_suffix('.meta'))
         
-        if args.hexdump: print(f"Hexdump: {dat.sample_format.hexdump} {savepath}")
+        if args.hexdump:
+            print(f"Hexdump: DATAFILE={savepath} {dat.sample_format.hexdump}")
 
 
 def get_parser():

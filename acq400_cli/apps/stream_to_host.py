@@ -93,7 +93,7 @@ def main(args):
         if savepath:
             uuts[uutname].save_metadata(savepath.with_suffix('.meta'))
             if args.hexdump:
-                print(f"{uuts[uutname].stream_sample_format.hexdump} {savepath}")
+                print(f"Hexdump: DATAFILE={savepath} {uuts[uutname].stream_sample_format.hexdump}")
 
 
 def get_parser():
