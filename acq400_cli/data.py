@@ -35,7 +35,7 @@ class Dataset(np.ndarray):
         return f"<Dataset {len(self)} Samples x {self.sample_format.tag} ({self.sample_format.bytes} Bytes)>"
     
     @classmethod
-    def from_uut(cls, raw, sample_format, calibration, sample_rate, hostname):
+    def from_uut(cls, raw, sample_format, calibration, sample_rate, hostname, es_width):
         """Init from UUT"""
 
         data = cls(
@@ -48,6 +48,7 @@ class Dataset(np.ndarray):
         data.calibration = calibration
         data.timestamp = None
         data.filepath = None
+        data.es_width = es_width
 
         return data
 
@@ -79,6 +80,7 @@ class Dataset(np.ndarray):
         data.calibration = metadata.get('calibration', calibration)
         data.timestamp = filename_attrs.get('timestamp', None)
         data.filepath = filepath
+        data.es_width = metadata.get('es_width', 1)
 
         return data
 

@@ -593,7 +593,7 @@ class Carrier:
         else:
             raw = self.read_from_port(PORTS.DATA0, sample_format.dtype, tsamples)
 
-        data = Dataset.from_uut(raw, sample_format, self.calibration, self.sample_rate, self.hostname)
+        data = Dataset.from_uut(raw, sample_format, self.calibration, self.sample_rate, self.hostname, self.es_width)
 
         logging.info(f"Read {data.length} samples ({data.nbytes / (1024 * 1024):.2f} MB) from {self.hostname}")
         return data
@@ -1080,6 +1080,7 @@ class Carrier:
         metadata = {}
         metadata['sample_rate'] = self.sample_rate
         metadata['calibration'] = self.calibration
+        metadata['es_width'] = self.es_width
         metadata['modules'] = {}
         for site in self.agg_sites:
             metadata['modules'][int(site)] = self[site].PART_NUM
