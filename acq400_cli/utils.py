@@ -329,3 +329,12 @@ def require_ao_master(fn):
         if not self.ao_master: return None
         return fn(self, *args, **kwargs)
     return wrapper
+
+def convert_to_broadcast(ip, netmask):
+    ip = ip.split('.')
+    nm = netmask.split('.')
+    for ii in range(3, 0, -1):
+        if nm[ii] != '0':
+            break
+        ip[ii] = '255'
+    return '.'.join(ip)
