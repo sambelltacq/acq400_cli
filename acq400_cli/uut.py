@@ -92,7 +92,7 @@ class Carrier:
                         self.site_aliases['ai_sites'][site.value] = new_site
                         if not self.ai_master and new_site.is_master:
                             self.site_aliases['ai_master'] = new_site
-                            self.current_shot = int(new_site.SHOT)
+                            self.current_shot = int(new_site.shot)
                             logging.debug(f"{self.addr}.{site} is ai master")
 
                     if new_site.is_ao:
@@ -497,7 +497,7 @@ class Carrier:
         if self.capture_state == CAPTURE_STATE['ARM']:
             logging.warning("Not Arming - System aleady ARMED")
             return
-        self.current_shot = int(self.ai_master.SHOT)
+        self.current_shot = int(self.ai_master.shot)
         logging.debug(f"Arming capture {self.hostname}")
         self.s0.set_arm = 1
         
@@ -512,7 +512,7 @@ class Carrier:
 
         while True:
             if self.capture_state in (CAPTURE_STATE.ARM, CAPTURE_STATE.RUN): break
-            if int(self.ai_master.SHOT) - int(getattr(self, "current_shot", 0)) == 1: break
+            if int(self.ai_master.shot) - int(getattr(self, "current_shot", 0)) == 1: break
             t1 = time.time() - t0
             if timeout and t1 > timeout: 
                 raise TimeoutError(f'{self.addr} failed to reach ARM after {timeout}s stuck in {self.capture_state.name}')
@@ -601,7 +601,7 @@ class Carrier:
     def stream_to_host(self, target_bytes, port=PORTS.STREAM, sample_format=None, datafile=None, bufferlen=4*(1024*1014)):
         """Stream data to host"""
 
-        self.current_shot = int(self.ai_master.SHOT)
+        self.current_shot = int(self.ai_master.shot)
 
         if not self.stream_enabled: 
             logging.error(f"{self.hostname} Streaming not enabled")
