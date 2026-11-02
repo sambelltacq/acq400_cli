@@ -234,8 +234,11 @@ class SigGen:
         self.send(f"VOLT:OFFS {offset}")
         self.send(f"FUNC:SHAP {shape}")
         self.send(f"BURS:NCYC {cycles}")
-        if period: self.send(f"BURS:INT:PER {period}")
-        self.send(f"TRIG:SOUR BUS")
+        if period:
+            self.send(f"BURS:INT:PER {period}")
+            self.send("TRIG:SOUR IMM")
+        else:
+            self.send("TRIG:SOUR BUS")
 
     def config_dc(self, voltage, scaler=2):
         """Config DC out"""
