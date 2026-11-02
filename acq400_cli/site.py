@@ -21,10 +21,11 @@ import threading
 import socket
 import atexit
 import logging
+import time
 
 from acq400_cli.constants import PORTS
 from acq400_cli.exception import KnobNotFoundError
-from acq400_cli.utils import StopWatch, cached_property, Triplet
+from acq400_cli.utils import cached_property, Triplet, convert_to_broadcast
 
 
 class CommandSocket:
@@ -328,6 +329,69 @@ class Mgt(Site):
         #sites > 9 are comms site
         #sites == 14 are dsp sites
         return self.get('module_role', 'COMMS').upper()
+
+
+class HUDP:
+    """HUDP overlay"""
+
+    def disable(self):
+        self.tx_reset = 1
+        self.hudp_gt_reset = 1
+
+    def enable(self):
+        self.hudp_gt_reset = 0
+        self.tx_reset = 0
+
+    def set_disco(self, disco=None):
+        if disco is None:
+            self.disco_en = 0
+        else:
+            print(f"{self.carrier.hostname}: enable disco at {disco}")
+            self.disco_idx = disco
+            self.disco_en = 1
+
+    def init(self, ip, gw, netmask):
+        self.disable()
+        self.ip = ip
+        self.gw = gw
+        self.netmask = netmask
+
+    def init_arp_req(self, timeout=15):
+        self.arp_request = 1
+        self.arp_request = 0
+        t0 = time.time()
+        while True:
+            if self.arp_mac_resp != '00:00:00:00:00:00:00': break
+            if time.time() - t0 > timeout:
+                raise TimeoutError(f'{self.carrier.hostname} failed get arp mac after {timeout}s')
+            time.sleep(0.5)
+            print(f"{self.carrier.hostname} waiting for arp")
+        logging.info(f"arp_mac_resp: {self.arp_mac_resp}")
+
+    def config_tx(self, dst_ip, src_port, dst_port, decim, broadcast=False, netmask='255.255.255.0'):
+        self.hudp_decim = decim
+        self.src_port = src_port
+        self.dst_port = dst_port
+        self.dst_ip = convert_to_broadcast(dst_ip, netmask) if broadcast else dst_ip
+
+    def config_rx(self, src_ip, src_port):
+        self.rx_src_ip = src_ip
+        self.rx_port = src_port
+
+    def config_relay(self, offset):
+        self.udp_data_src = 1
+        if offset > 0:
+            tx_ssb = int(self.carrier.s0.dssb) - offset
+            self.slice_len = tx_ssb // 4
+            self.slice_off = offset // 4
+        else:
+            tx_ssb = int(self.slice_len) * 4
+        return tx_ssb
+
+
+class Mgt508:
+    """MGT 508 overlay"""
+    pass
 
 
 OVERLAYS = {
