@@ -4,7 +4,7 @@
 Setup HUDP for UUTs
 """
 
-from acq400_cli import ArgParser, Carrier
+from acq400_cli import ArgParser, Carrier, CAPTURE_STATE
 import logging
 
 INVALID = ('NONE', 'PC')
@@ -12,18 +12,23 @@ MTU = 9038 - 66
 
 
 def main(args):
-    print(args)
 
     tx_uut = Carrier(args.tx_uutname) if args.tx_uutname and args.tx_uutname.upper() not in INVALID else None
     rx_uut = Carrier(args.rx_uutname) if args.rx_uutname and args.rx_uutname.upper() not in INVALID else None
 
+
     if tx_uut:
         print(f"TX UUT: {tx_uut.hostname}")
-        if args.run0 is not None: tx_uut.s0.run0 = args.run0
 
-        if tx_uut.ai_master.knob_exists('pack24'): 
+        if tx_uut.capture_state != CAPTURE_STATE.IDLE:
+            logging.error(f"ERROR: {tx_uut.hostname} is {tx_uut.capture_state.name}, abort capture first")
+            exit()
+
+        if tx_uut.ai_master.knob_exists('pack24'):
             if args.pack24: tx_uut.ai_master.pack24 = '1'
             else: tx_uut.ai_master.pack24 = '1'
+
+        if args.run0 is not None: tx_uut.s0.run0 = args.run0
 
         tx_uut.hudp.init(args.tx_ip, args.gw or args.rx_ip, args.netmask)
         tx_uut.hudp.set_disco(args.disco)
@@ -59,6 +64,10 @@ def main(args):
 
     if rx_uut:
         print(f"RX UUT: {rx_uut.hostname}")
+        if rx_uut.capture_state != CAPTURE_STATE.IDLE:
+            logging.error(f"ERROR: {rx_uut.hostname} is {rx_uut.capture_state.name}, abort capture first")
+            exit()
+
         if args.play0 is not None: rx_uut.s0.play0 = args.play0
 
         rx_uut.s0.distributor = 'comms=U off'
