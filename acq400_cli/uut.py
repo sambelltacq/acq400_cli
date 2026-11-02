@@ -111,9 +111,9 @@ class Carrier:
                             self.site_aliases['dio_master'] = new_site
                             logging.debug(f"{self.addr}.{site} is dio master")
 
-            except ConnectionRefusedError:
-                #logging.debug(f"{self.addr}.{site} Not available")
-                pass
+            except (ConnectionRefusedError, TimeoutError, OSError) as e:
+                if site == SITES.s0: raise
+                logging.debug(f"{self.addr}.{site} Not available ({e})")
             except socket.gaierror:
                 logging.error(f"{self.addr} is not reachable")
                 raise
