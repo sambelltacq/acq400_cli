@@ -303,7 +303,7 @@ class Site:
 
         return spec
 
-class Bolo8(Site):
+class Bolo8:
     """BOLO8 overlay"""
     @property
     def data_size(self):
@@ -311,7 +311,7 @@ class Bolo8(Site):
         bypass_enabled = int(self.carrier.dsp.DSP_BYPASS) == 1
         if bypass_enabled: return 2
         return 4 if int(self.data32) else 2
-        
+
     @property
     def nchan(self):
         """Return number of channels"""
@@ -319,15 +319,13 @@ class Bolo8(Site):
         if bypass_enabled: return 16
         return int(self.active_chan)
 
-class Mgt(Site):
-    """Mgt overlay"""
+
+class MGT:
+    """MGT overlay"""
+
     @property
     def role(self):
         """return site role"""
-        #TODO handle MGTA or B or HUDP or ETH or WR here
-        #perhaps a commns site 
-        #sites > 9 are comms site
-        #sites == 14 are dsp sites
         return self.get('module_role', 'COMMS').upper()
 
 
@@ -396,7 +394,8 @@ class Mgt508:
 
 OVERLAYS = {
     "BOLO8BLF": Bolo8,
-    "MGT482": Mgt,
+    "MGT": MGT,
+    "HUDP": HUDP,
 }
 def load_overlay(site, name):
     """Add an overlay to a site"""
