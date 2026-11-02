@@ -404,4 +404,4 @@ def load_overlay(site, name):
     if overlay in site.__class__.__mro__: return
     cls = type(f"{overlay.__name__}_{site.__class__.__name__}", (overlay, site.__class__), {})
     object.__setattr__(site, '__class__', cls)
-    logging.info(f"{name} overlay applied to site {site.site}")
+    logging.debug(f"{name} overlay applied to site {site.site}")
