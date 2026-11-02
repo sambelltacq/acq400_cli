@@ -399,7 +399,7 @@ class Carrier:
     @property
     def transient_values(self):
         """Return transient values dict"""
-        return DotDict(part.split("=", 1) for part in self.s0.transient.split())
+        return DotDict((key, int(value)) for key, value in (part.split("=", 1) for part in self.s0.transient.split()))
 
     @property
     def auto_soft_enabled(self):
