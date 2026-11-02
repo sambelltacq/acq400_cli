@@ -21,6 +21,10 @@ def main(args):
         print(f"TX UUT: {tx_uut.hostname}")
         if args.run0 is not None: tx_uut.s0.run0 = args.run0
 
+        if tx_uut.ai_master.knob_exists('pack24'): 
+            if args.pack24: tx_uut.ai_master.pack24 = '1'
+            else: tx_uut.ai_master.pack24 = '1'
+
         tx_uut.hudp.init(args.tx_ip, args.gw or args.rx_ip, args.netmask)
         tx_uut.hudp.set_disco(args.disco)
         tx_uut.hudp.config_tx(args.rx_ip, args.port, args.port, args.decim, args.broadcast, args.netmask)
@@ -82,6 +86,7 @@ def get_parser():
 
     parser.add_argument("--broadcast", action='store_true', help="broadcast the data")
     parser.add_argument("--disco", default=None, type=int, help="enable discontinuity check at index x")
+    parser.add_argument("--pack24", action='store_true', help="enable pack 24 mode")
 
     parser.add_argument("--hudp_relay", default=None, type=int, help="relay LLC VI out HUDP txt offset")
     parser.add_argument("--spp", default=1, type=int, help="samples per packet")
