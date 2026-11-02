@@ -150,6 +150,11 @@ class FanoutProxy(dict):
             threads[key] = thread
         return {key: thread.join() for key, thread in threads.items()}
 
+    def __getitem__(self, key):
+        if type(key) is int: return list(self.values())[key]
+        if isinstance(key, slice): return self.__class__(dict(list(self.items())[key]))
+        return super().__getitem__(key)
+
     def __getattr__(self, name):
         return self.__class__(self._fanout(getattr, name))
 
