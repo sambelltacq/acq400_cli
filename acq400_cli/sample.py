@@ -53,6 +53,7 @@ class SampleFormat:
         self.channels = {}
         self.physical = {}
         self.bytes = 0
+        self.data_bytes = 0
         self.dtype = []
         self.types = {}
 
@@ -96,6 +97,7 @@ class SampleFormat:
                 self.types[chan_type].append(logical_chan)
                 self.dtype.append((str(logical_chan), dtype))
                 self.bytes += chan_size
+                if chan_type != 'SPD': self.data_bytes += chan_size
                 self.channels[logical_chan] = channel
                 self.physical.update({chan: channel for chan in channel['physical']})
 
