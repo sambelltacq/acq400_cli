@@ -10,8 +10,31 @@ cd acq400_cli
 pip3 install -e .
 ```
 
+## Subcommands
+
+After install, run subcommands as `acq400_cli <subcommand> …`.
+
+| Subcommand | Description |
+|-----|-------------|
+| [abort_capture](#abort_capture) | Abort capture on UUTs |
+| [configure_capture](#configure_capture) | Configure capture (sites, spad, trigger, RGM) |
+| [configure_clock](#configure_clock) | Configure sync role / clock |
+| [demux_data](#demux_data) | Demux muxed datafiles into seperate channels |
+| [generate_hexdump](#generate_hexdump) | Generate hexdump commands for UUT data |
+| [generate_waveform](#generate_waveform) | Build waveforms from `.wdef` or args |
+| [load_gpg](#load_gpg) | Load GPG from an STL file |
+| [plot_datafile](#plot_datafile) | Plot datafiles |
+| [setup_hudp](#setup_hudp) | Configure Hardware UDP (HUDP) TX/RX |
+| [stream_to_awg](#stream_to_awg) | Stream waveforms to AO continuously |
+| [stream_to_host](#stream_to_host) | Stream capture data continuously to the host |
+| [transient_capture](#transient_capture) | Arm and capture transient data to the host |
+| [upload_waveform](#upload_waveform) | Upload waveform files to AO modules |
+| [upload_waveform_segment](#upload_waveform_segment) | Upload waveforms into AWG segments |
+| [wait_for_state](#wait_for_state) | Wait until UUTs reach a state |
+
 ## Usage
 
+<a id="transient_capture"></a>
 ### Transient Capture
 
 Capture transient data and save it to the host.
@@ -32,6 +55,7 @@ acq400_cli transient_capture --post=100K --trigger=SOFT,RISING --rgm=RTM,RISING 
 ```
 
 
+<a id="stream_to_host"></a>
 ### Continuous Stream
 
 Stream data continuously to the host.
@@ -63,6 +87,7 @@ acq400_cli stream_to_host --trigger=EXT,RISING --samples=1M --filebytes=10MB <uu
 ```
 Note: `--filebytes` will round up to the nearest whole sample.
 
+<a id="configure_clock"></a>
 ### Configure Clocking
 
 Configure UUTs sync role
@@ -73,6 +98,7 @@ acq400_cli configure_clock --clk=1M <uutnames>
 ```
 
 
+<a id="configure_capture"></a>
 ### Configure Capture
 
 Configure UUTs capture.
@@ -117,6 +143,25 @@ acq400_cli configure_capture --us <uutnames>
 acq400_cli configure_capture --no_es <uutnames>
 ```
 
+<a id="abort_capture"></a>
+### Abort Capture
+
+Abort capture on UUTs.
+
+```bash
+acq400_cli abort_capture <uutnames>
+```
+
+<a id="wait_for_state"></a>
+### Wait for State
+
+Block until UUTs reach a capture state (`IDLE`, `ARM`, `RUN`, …).
+
+```bash
+acq400_cli wait_for_state --state=IDLE --timeout=30 <uutnames>
+```
+
+<a id="load_gpg"></a>
 ### Load GPG
 
 Configure GPG from an STL file
@@ -160,6 +205,30 @@ acq400_cli load_gpg --stl=sos0.stl --bit=0 <uutnames>
 | **--clock**, **--clk** | — | GPG clock triplet (`SOURCE,SENSE` or `enable,line,sense`) |
 | **--bit** | `0` | GPG target bit |
 
+<a id="setup_hudp"></a>
+### Setup HUDP
+
+Configure Hardware UDP between a TX UUT and an RX UUT (or `none` / `pc` for one side).
+
+- **TX → RX**:
+```bash
+acq400_cli setup_hudp --tx_ip 10.12.198.128 --rx_ip 10.12.198.129 \
+    --run0='1 1,16,0' --play0='1 16' acq2106_363 acq2106_364
+```
+
+- **TX → PC**:
+```bash
+acq400_cli setup_hudp --tx_ip 10.12.198.128 --rx_ip 10.12.198.254 \
+    --run0='1 1,16,0' --spp=11 acq2106_363 none
+```
+
+- **Broadcast TX**:
+```bash
+acq400_cli setup_hudp --tx_ip 10.12.198.128 --rx_ip 10.12.198.129 \
+    --broadcast --run0='1 1,16,0' acq2106_363 none
+```
+
+<a id="plot_datafile"></a>
 ### Plot Datafile
 
 Plot a datafile from disk
@@ -214,6 +283,7 @@ acq400_cli plot_datafile --chan=1 --egu <datafiles>
 acq400_cli plot_datafile --pcfg=<pcfg2 file> <datafiles>
 ```
 
+<a id="generate_hexdump"></a>
 ### Generate Hexdump
 
 Print `hexdump` commands for UUTs current stream and transient sample formats.
@@ -228,6 +298,7 @@ acq400_cli generate_hexdump <uutnames>
 acq400_cli generate_hexdump --as_width=4 <uutnames>
 ```
 
+<a id="demux_data"></a>
 ### Demux Datafile
 
 Demux datafiles into individual channels
@@ -237,6 +308,7 @@ Demux datafiles into individual channels
 acq400_cli demux_data <datafiles>
 ```
 
+<a id="upload_waveform"></a>
 ### Upload Waveform
 
 Upload waveform files to AO modules (oneshot, rearm, or continuous).
@@ -273,7 +345,8 @@ acq400_cli upload_waveform <uutnames> sine.dat --rgm=RTM,RISING --burstlen=5000 
 | **--clock_div**, **--clkdiv** | — | AWG clock divider |
 | **--prepend0** | off | Prepend one empty distributor sample (zeros) to the start of the waveform |
 
-#### Upload Waveform Segments
+<a id="upload_waveform_segment"></a>
+### Upload Waveform Segments
 
 Load each file into a successive AWG segment (`A`, `B`, `C`, …) in REARM mode, then keep feeding a play pattern until Ctrl+C. Requires `awg_max_seg` large enough for the file count.
 
@@ -300,6 +373,7 @@ Press Ctrl+C to stop feeding the pattern.
 | **--clock**, **--clk** | — | AWG clock |
 | **--clock_div**, **--clkdiv** | — | AWG clock divider |
 
+<a id="stream_to_awg"></a>
 ### Stream AWG
 
 Stream waveform files to AO modules continuously until Ctrl+C.
@@ -332,6 +406,7 @@ acq400_cli stream_to_awg <uutnames> sine.dat --rgm=RTM,RISING --burstlen=5000 --
 Note: Stop with Ctrl+C.
 
 
+<a id="generate_waveform"></a>
 ### Generate Waveform
 
 Build a waveform from a `.wdef` file **or** from spec args. `--nchan`, `--length`, and `--data_size` are always required. `--wavedef` cannot be combined with spec args.
