@@ -398,11 +398,11 @@ OVERLAYS = {
     "BOLO8BLF": Bolo8,
     "MGT482": Mgt,
 }
-
-def load_overlay(site, model):
-    """Load site overlay if present"""
-    overlay = OVERLAYS.get(model)
+def load_overlay(site, name):
+    """Add an overlay to a site"""
+    overlay = OVERLAYS.get(name)
     if not overlay: return
-    logging.debug(f"{model} overlay applied to site {site.site}")
-    site.__class__ = overlay
-
+    if overlay in site.__class__.__mro__: return
+    cls = type(f"{overlay.__name__}_{site.__class__.__name__}", (overlay, site.__class__), {})
+    object.__setattr__(site, '__class__', cls)
+    logging.info(f"{name} overlay applied to site {site.site}")
