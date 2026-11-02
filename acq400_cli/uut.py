@@ -17,7 +17,7 @@ from acq400_cli.constants import *
 from acq400_cli.exception import *
 from acq400_cli.sample import TransientSample, StreamSample
 from acq400_cli.data import Dataset, gen_data_filename
-from acq400_cli.site import Site
+from acq400_cli.site import Site, load_overlay
 from acq400_cli.hdmi import CarrierTree
 from acq400_cli.clients import StatusMontior
 
@@ -80,12 +80,14 @@ class Carrier:
                     if site == SITES.s0: return
 
                     if site.value in self.mgt_sites:
+                        load_overlay(new_site, 'MGT')
                         self.site_aliases[self.mgt_sites[site.value]] = new_site
 
                     if site.value in self.wr_site:
                         self.site_aliases[self.wr_site[site.value]] = new_site
 
                     if site.value in self.hudp_site:
+                        load_overlay(new_site, 'HUDP')
                         self.site_aliases[self.hudp_site[site.value]] = new_site
 
                     if new_site.is_ai:
