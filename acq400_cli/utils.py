@@ -194,6 +194,15 @@ class SigGen:
         self.socket = socket.socket()
         self.socket.connect((self.addr, 5025))
 
+    @property
+    def params(self):
+        return DotDict({
+            'freq': float(self.send("FREQ?")),
+            'voltage': float(self.send("VOLT?")),
+            'cycles': float(self.send("BURS:NCYC?")),
+            'burst': int(self.send("BURS:STAT?")),
+        })
+    
     def send(self, message):
         logging.trace(message)
         self.socket.send(f"{message}\n".encode())
