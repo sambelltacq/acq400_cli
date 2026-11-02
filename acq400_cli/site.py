@@ -41,15 +41,15 @@ class CommandSocket:
         self.send_message("prompt on")
         atexit.register(self.close)
 
-    def connect(self):
+    def connect(self, timeout=3):
         """Connect socket to port"""
         self.close()
         try:
             #logging.debug(f"{self.addr}:{self.port} Initing Socket")
-            self.sock = socket.socket()
-            self.sock.connect((self.addr, self.port))
+            self.sock = socket.create_connection((self.addr, self.port), timeout)
             self.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        except ConnectionRefusedError:
+            self.sock.settimeout(None)
+        except (ConnectionRefusedError, TimeoutError, OSError):
             self.close()
             raise
 
