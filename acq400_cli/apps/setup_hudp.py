@@ -26,7 +26,7 @@ def main(args):
 
         if tx_uut.ai_master.knob_exists('pack24'):
             if args.pack24: tx_uut.ai_master.pack24 = '1'
-            else: tx_uut.ai_master.pack24 = '1'
+            else: tx_uut.ai_master.pack24 = '0'
 
         if args.run0 is not None: tx_uut.s0.run0 = args.run0
 
